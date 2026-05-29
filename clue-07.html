@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#414042" />
+  <title>Clue 07 — The Riverside Mystery</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/remedy-r.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="topbar" id="topbar"></nav>
+
+  <main class="clue-page">
+    <a href="#" id="backLink" class="back-link">← Back to your team</a>
+
+    <div class="clue-header">
+      <div class="clue-number-large">Clue 07 of 30</div>
+      <h1>The Riverside Mystery</h1>
+      <span class="clue-type-pill" style="color: #6dc4ff; border: 1px solid #6dc4ff66; background: #6dc4ff1a;">Anagram</span>
+    </div>
+
+    
+    <div class="puzzle-box center">
+      <h2>Rearrange these letters</h2>
+      <p>The 9 letters below spell a historic Kensington heritage building. <em>(Two words.)</em></p>
+      <div class="emoji-row" style="font-family: 'Fraunces', serif; font-weight: 800; letter-spacing: 0.3em;">U G H E S H C M H O</div>
+      <p style="font-size: 0.85rem; color: var(--text-dim);">Hint: One word is a Scottish-Irish surname, the other is what kind of building.</p>
+      <div class="answer-row">
+        <input type="text" id="answerInput" class="text-input" placeholder="Your answer..." autocomplete="off" />
+        <button class="btn btn-primary" id="checkBtn" type="button">Check</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    
+
+    <div class="photo-box" id="photoBox" style="display: none;">
+      <h3>📸 Photo proof required</h3>
+      <p>Take a team photo at <strong id="locationName"></strong> to claim the clue.</p>
+      <label class="upload-btn" for="photoInput">Upload team photo</label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" />
+      <img class="photo-preview" id="photoPreview" alt="Your team photo" />
+    </div>
+
+    <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    const CLUE_NUM = 7;
+    const ANSWER = "McHugh House";
+    const LOCATION = "McHugh House";
+
+    // back link points at the team's page
+    const teamInfo = window.REMEDY.getTeamInfo();
+    const backLink = document.getElementById("backLink");
+    if (teamInfo) { backLink.href = teamInfo.url; backLink.textContent = `← Back to ${teamInfo.name}`; }
+    else { backLink.href = "index.html"; backLink.textContent = "← Choose your team"; }
+
+    const photoBox = document.getElementById("photoBox");
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const locationName = document.getElementById("locationName");
+
+    function revealLocation() {
+      locationName.textContent = LOCATION;
+      photoBox.style.display = "block";
+    }
+
+    function loadPhoto() {
+      const team = window.REMEDY.getTeam();
+      const data = localStorage.getItem(window.REMEDY.photoKey(team, CLUE_NUM));
+      if (data) {
+        photoPreview.src = data;
+        photoPreview.classList.add("show");
+      }
+    }
+
+    photoInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        photoPreview.src = ev.target.result;
+        photoPreview.classList.add("show");
+        try {
+          const team = window.REMEDY.getTeam();
+          localStorage.setItem(window.REMEDY.photoKey(team, CLUE_NUM), ev.target.result);
+        } catch (err) {
+          console.warn("Photo too large to save locally:", err);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Solve button
+    const solveBtn = document.getElementById("solveBtn");
+    function refreshSolve() {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) {
+        solveBtn.textContent = "Solved ✓ (tap to undo)";
+        solveBtn.classList.add("solved");
+      } else {
+        solveBtn.textContent = "I solved it ✓";
+        solveBtn.classList.remove("solved");
+      }
+    }
+    solveBtn.addEventListener("click", () => {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
+      else solved.add(CLUE_NUM);
+      window.REMEDY.saveProgress(solved);
+      refreshSolve();
+    });
+
+    // Photo persistence
+    loadPhoto();
+    refreshSolve();
+
+    // Puzzle-specific logic
+    
+    const checkBtn = document.getElementById("checkBtn");
+    const answerInput = document.getElementById("answerInput");
+    const feedback = document.getElementById("feedback");
+    function normalize(s) { return s.replace(/[^A-Za-z0-9]/g, "").toLowerCase(); }
+    function check() {
+      const guess = normalize(answerInput.value);
+      const correct = normalize(McHugh House);
+      if (!guess) return;
+      if (guess === correct) {
+        feedback.className = "feedback show correct";
+        feedback.textContent = `Correct! Head to ${"McHugh House"} and snap a team photo.`;
+        revealLocation();
+      } else {
+        feedback.className = "feedback show wrong";
+        feedback.textContent = "Not quite. Try again.";
+      }
+    }
+    checkBtn.addEventListener("click", check);
+    answerInput.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
+
+  </script>
+</body>
+</html>

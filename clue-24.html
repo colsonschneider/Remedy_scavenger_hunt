@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#414042" />
+  <title>Clue 24 — Color Echo</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/remedy-r.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="topbar" id="topbar"></nav>
+
+  <main class="clue-page">
+    <a href="#" id="backLink" class="back-link">← Back to your team</a>
+
+    <div class="clue-header">
+      <div class="clue-number-large">Clue 24 of 30</div>
+      <h1>Color Echo</h1>
+      <span class="clue-type-pill" style="color: #ff6b9a; border: 1px solid #ff6b9a66; background: #ff6b9a1a;">Simon Says</span>
+    </div>
+
+    
+    <div class="puzzle-box center">
+      <div class="placeholder-icon">🎨</div>
+      <h2>Simon Says</h2>
+      <p>Repeat the color sequence.</p>
+      <p style="margin-top: 18px; font-size: 0.85rem; color: var(--orange);">
+        <em>Demo placeholder — this puzzle type will be built before the event.</em>
+      </p>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+
+    <div class="photo-box" id="photoBox" style="display: none;">
+      <h3>📸 Photo proof required</h3>
+      <p>Take a team photo at <strong id="locationName"></strong> to claim the clue.</p>
+      <label class="upload-btn" for="photoInput">Upload team photo</label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" />
+      <img class="photo-preview" id="photoPreview" alt="Your team photo" />
+    </div>
+
+    <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    const CLUE_NUM = 24;
+    const ANSWER = "Annex Ales";
+    const LOCATION = "Annex Ales";
+
+    // back link points at the team's page
+    const teamInfo = window.REMEDY.getTeamInfo();
+    const backLink = document.getElementById("backLink");
+    if (teamInfo) { backLink.href = teamInfo.url; backLink.textContent = `← Back to ${teamInfo.name}`; }
+    else { backLink.href = "index.html"; backLink.textContent = "← Choose your team"; }
+
+    const photoBox = document.getElementById("photoBox");
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const locationName = document.getElementById("locationName");
+
+    function revealLocation() {
+      locationName.textContent = LOCATION;
+      photoBox.style.display = "block";
+    }
+
+    function loadPhoto() {
+      const team = window.REMEDY.getTeam();
+      const data = localStorage.getItem(window.REMEDY.photoKey(team, CLUE_NUM));
+      if (data) {
+        photoPreview.src = data;
+        photoPreview.classList.add("show");
+      }
+    }
+
+    photoInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        photoPreview.src = ev.target.result;
+        photoPreview.classList.add("show");
+        try {
+          const team = window.REMEDY.getTeam();
+          localStorage.setItem(window.REMEDY.photoKey(team, CLUE_NUM), ev.target.result);
+        } catch (err) {
+          console.warn("Photo too large to save locally:", err);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Solve button
+    const solveBtn = document.getElementById("solveBtn");
+    function refreshSolve() {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) {
+        solveBtn.textContent = "Solved ✓ (tap to undo)";
+        solveBtn.classList.add("solved");
+      } else {
+        solveBtn.textContent = "I solved it ✓";
+        solveBtn.classList.remove("solved");
+      }
+    }
+    solveBtn.addEventListener("click", () => {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
+      else solved.add(CLUE_NUM);
+      window.REMEDY.saveProgress(solved);
+      refreshSolve();
+    });
+
+    // Photo persistence
+    loadPhoto();
+    refreshSolve();
+
+    // Puzzle-specific logic
+    
+    const feedback = document.getElementById("feedback");
+    if (feedback) {
+      feedback.className = "feedback show";
+      feedback.style.background = "#fff3e0";
+      feedback.style.color = "#8a4a14";
+      feedback.style.border = "1px solid #ffd6a3";
+      feedback.textContent = `Demo: the puzzle for "${"Annex Ales"}" is being built. Tap "I solved it" to mark this clue done.`;
+    }
+    revealLocation();
+
+  </script>
+</body>
+</html>

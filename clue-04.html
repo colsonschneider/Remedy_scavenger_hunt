@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#414042" />
+  <title>Clue 04 — Letters in Chaos</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/remedy-r.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="topbar" id="topbar"></nav>
+
+  <main class="clue-page">
+    <a href="#" id="backLink" class="back-link">← Back to your team</a>
+
+    <div class="clue-header">
+      <div class="clue-number-large">Clue 04 of 30</div>
+      <h1>Letters in Chaos</h1>
+      <span class="clue-type-pill" style="color: #6dc4ff; border: 1px solid #6dc4ff66; background: #6dc4ff1a;">Word Scramble</span>
+    </div>
+
+    
+    <div class="puzzle-box center">
+      <h2>Unscramble these letters</h2>
+      <p>Tap letters in order. Each letter is used once. Tap a placed tile to send it back.</p>
+      <div class="scramble-divider">Your answer</div>
+      <div class="scramble-row" id="scramblePlaced"></div>
+      <div class="scramble-divider">Pool</div>
+      <div class="scramble-row" id="scramblePool"></div>
+      <div class="conn-controls">
+        <button class="btn btn-outline" id="scrambleClear" type="button">Reset</button>
+        <button class="btn btn-primary" id="scrambleCheck" type="button">Check</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    
+
+    <div class="photo-box" id="photoBox" style="display: none;">
+      <h3>📸 Photo proof required</h3>
+      <p>Take a team photo at <strong id="locationName"></strong> to claim the clue.</p>
+      <label class="upload-btn" for="photoInput">Upload team photo</label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" />
+      <img class="photo-preview" id="photoPreview" alt="Your team photo" />
+    </div>
+
+    <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    const CLUE_NUM = 4;
+    const ANSWER = "KENSINGTON";
+    const LOCATION = "Kensington (the neighbourhood)";
+
+    // back link points at the team's page
+    const teamInfo = window.REMEDY.getTeamInfo();
+    const backLink = document.getElementById("backLink");
+    if (teamInfo) { backLink.href = teamInfo.url; backLink.textContent = `← Back to ${teamInfo.name}`; }
+    else { backLink.href = "index.html"; backLink.textContent = "← Choose your team"; }
+
+    const photoBox = document.getElementById("photoBox");
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const locationName = document.getElementById("locationName");
+
+    function revealLocation() {
+      locationName.textContent = LOCATION;
+      photoBox.style.display = "block";
+    }
+
+    function loadPhoto() {
+      const team = window.REMEDY.getTeam();
+      const data = localStorage.getItem(window.REMEDY.photoKey(team, CLUE_NUM));
+      if (data) {
+        photoPreview.src = data;
+        photoPreview.classList.add("show");
+      }
+    }
+
+    photoInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        photoPreview.src = ev.target.result;
+        photoPreview.classList.add("show");
+        try {
+          const team = window.REMEDY.getTeam();
+          localStorage.setItem(window.REMEDY.photoKey(team, CLUE_NUM), ev.target.result);
+        } catch (err) {
+          console.warn("Photo too large to save locally:", err);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Solve button
+    const solveBtn = document.getElementById("solveBtn");
+    function refreshSolve() {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) {
+        solveBtn.textContent = "Solved ✓ (tap to undo)";
+        solveBtn.classList.add("solved");
+      } else {
+        solveBtn.textContent = "I solved it ✓";
+        solveBtn.classList.remove("solved");
+      }
+    }
+    solveBtn.addEventListener("click", () => {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
+      else solved.add(CLUE_NUM);
+      window.REMEDY.saveProgress(solved);
+      refreshSolve();
+    });
+
+    // Photo persistence
+    loadPhoto();
+    refreshSolve();
+
+    // Puzzle-specific logic
+    
+    const ANSWER = "KENSINGTON".toUpperCase().replace(/[^A-Z]/g, "");
+    const placed = [];
+    const pool = ANSWER.split("");
+    // shuffle pool
+    for (let i = pool.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [pool[i], pool[j]] = [pool[j], pool[i]];
+    }
+    const used = Array(pool.length).fill(false);
+    const placedEl = document.getElementById("scramblePlaced");
+    const poolEl = document.getElementById("scramblePool");
+    const checkBtn = document.getElementById("scrambleCheck");
+    const clearBtn = document.getElementById("scrambleClear");
+    const feedback = document.getElementById("feedback");
+
+    function render() {
+      placedEl.innerHTML = "";
+      placed.forEach((p, idx) => {
+        const t = document.createElement("div");
+        t.className = "scramble-tile placed";
+        t.textContent = pool[p.poolIdx];
+        t.addEventListener("click", () => {
+          used[p.poolIdx] = false;
+          placed.splice(idx, 1);
+          render();
+        });
+        placedEl.appendChild(t);
+      });
+      // empty slots
+      for (let i = placed.length; i < ANSWER.length; i++) {
+        const t = document.createElement("div");
+        t.className = "scramble-tile";
+        t.style.opacity = "0.3";
+        placedEl.appendChild(t);
+      }
+      poolEl.innerHTML = "";
+      pool.forEach((ch, i) => {
+        const t = document.createElement("div");
+        t.className = "scramble-tile" + (used[i] ? " used" : "");
+        t.textContent = ch;
+        t.addEventListener("click", () => {
+          if (used[i] || placed.length >= ANSWER.length) return;
+          used[i] = true;
+          placed.push({ poolIdx: i });
+          render();
+        });
+        poolEl.appendChild(t);
+      });
+    }
+    checkBtn.addEventListener("click", () => {
+      const guess = placed.map(p => pool[p.poolIdx]).join("");
+      if (guess === ANSWER) {
+        feedback.className = "feedback show correct";
+        feedback.textContent = `Correct — ${ANSWER}! Head to ${"Kensington (the neighbourhood)"} and snap a team photo.`;
+        revealLocation();
+      } else {
+        feedback.className = "feedback show wrong";
+        feedback.textContent = "Not quite — try a different order.";
+      }
+    });
+    clearBtn.addEventListener("click", () => {
+      placed.length = 0;
+      for (let i = 0; i < used.length; i++) used[i] = false;
+      render();
+    });
+    render();
+
+  </script>
+</body>
+</html>
