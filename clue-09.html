@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1c1b1f" />
-  <title>09 · Hidden in Plain Sight</title>
+  <title>09 · Two Words in French</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,39 +18,69 @@
     <a href="index.html" class="back-link">← Back to clues</a>
 
     <div class="clue-header">
-      <div class="clue-number-large">Clue 09 of 30</div>
-      <h1>Hidden in Plain Sight</h1>
-      <span class="clue-type-pill" style="color: #F26921; border: 1px solid #F2692166; background: #F269211a;">Visual Riddle</span>
+      <div class="clue-number-large">Clue 09 of 17</div>
+      <h1>Two Words in French</h1>
+      <span class="clue-type-pill" style="color: #A4B54B; border: 1px solid #A4B54B66; background: #A4B54B1a;">Translation</span>
     </div>
 
     
     <div class="puzzle-box center">
-      <div class="placeholder-icon">🔍</div>
-      <h2>Visual Riddle</h2>
-      <p>Find a hidden word in the image.</p>
-      <p style="margin-top: 14px; font-size: 0.82rem; color: var(--orange);">
-        <em>Demo placeholder — puzzle to be built before the event.</em>
-      </p>
+      <h2>French to English</h2>
+      <p>The French phrase below names a riverside Calgary neighbourhood. Translate the English meaning OR type the original French name to solve.</p>
+      <div class="emoji-row" style="font-family: 'Fraunces', serif; font-weight: 800; font-size: 2rem; font-style: italic;">Eau Claire</div>
+      <p style="font-size: 0.85rem;">Hint: "Eau" means water. "Claire" means clear. Two words.</p>
+      <div class="answer-row">
+        <input type="text" id="answerInput" class="text-input" placeholder="Your answer..." autocomplete="off" />
+        <button class="btn btn-orange" id="checkBtn" type="button">Check</button>
+      </div>
       <div class="feedback" id="feedback"></div>
     </div>
-
+    
 
     <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
   </main>
 
+  <!-- Help modal -->
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet help-content">
+      <div class="modal-handle"></div>
+      <h3>Quick help</h3>
+      <p class="help-sub">Stuck? Here's the gist of this clue.</p>
+      <ul>
+        <li>Solve the puzzle on this page.</li>
+        <li>The puzzle reveals a Calgary location.</li>
+        <li>Walk there and take a team photo.</li>
+        <li>Tap "I solved it ✓" to mark it done.</li>
+      </ul>
+      <button class="btn btn-primary modal-close-btn" id="helpClose" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- Team modal -->
+  <div class="modal-overlay" id="teamModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-family: 'Fraunces', Georgia, serif; margin: 0 0 4px;">Your team</h3>
+      <p class="help-sub" style="margin: 0 0 12px;">All teams in the hunt.</p>
+      <div class="team-modal-list" id="teamModalList"></div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="teamClose" type="button">Close</button>
+        <button class="btn btn-orange" id="teamSwitch" type="button">Switch team</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     const CLUE_NUM = 9;
-    const ANSWER = "Wonderland";
-    const LOCATION = "Wonderland (giant head, The Bow)";
+    const ANSWER = "EAU CLAIRE";
+    const ACCEPT = ["EAU CLAIRE", "CLEAR WATER", "CLEAN WATER"];
+    const LOCATION = "Eau Claire";
 
-    // If no team is set, route home
-    if (!window.REMEDY.getTeam()) {
-      window.location.href = "index.html";
-    }
+    if (!window.REMEDY.getTeam()) { window.location.href = "index.html"; }
 
     const solveBtn = document.getElementById("solveBtn");
-    async function refreshSolve() {
+    function refreshSolve() {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) {
         solveBtn.textContent = "Solved ✓ (tap to undo)";
@@ -62,28 +92,35 @@
     }
     solveBtn.addEventListener("click", async () => {
       const solved = window.REMEDY.loadProgress();
-      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
-      else solved.add(CLUE_NUM);
+      const wasSolved = solved.has(CLUE_NUM);
+      if (wasSolved) solved.delete(CLUE_NUM); else solved.add(CLUE_NUM);
       solveBtn.textContent = "Saving…";
       await window.REMEDY.saveProgress(solved);
       refreshSolve();
+      if (!wasSolved) window.REMEDY.confettiBurst();
     });
 
-    // Sync state from server on load (so multiple devices stay in sync)
-    (async () => {
-      await window.REMEDY.fetchProgress();
-      refreshSolve();
-    })();
+    (async () => { await window.REMEDY.fetchProgress(); refreshSolve(); })();
     refreshSolve();
 
-    // Puzzle-specific code
     
+    const checkBtn = document.getElementById("checkBtn");
+    const answerInput = document.getElementById("answerInput");
     const feedback = document.getElementById("feedback");
-    if (feedback) {
-      feedback.className = "feedback show";
-      feedback.style.background = "#fff3e0"; feedback.style.color = "#8a4a14"; feedback.style.border = "1px solid #ffd6a3";
-      feedback.textContent = `Demo placeholder for ${"Wonderland (giant head, The Bow)"}. Tap "I solved it" to mark this clue done.`;
+    const norm = s => (s || "").replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+    function check() {
+      if (!answerInput.value.trim()) return;
+      const ok = ACCEPT.some(a => norm(answerInput.value) === norm(a));
+      if (ok) {
+        feedback.className = "feedback show correct";
+        feedback.textContent = `Correct! Head to ${LOCATION}.`;
+      } else {
+        feedback.className = "feedback show wrong";
+        feedback.textContent = "Not quite. Try again.";
+      }
     }
+    checkBtn.addEventListener("click", check);
+    answerInput.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 
   </script>
 </body>

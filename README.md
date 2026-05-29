@@ -1,36 +1,23 @@
 # Remedy Engineering — Calgary Scavenger Hunt
 
-A mobile-first scavenger hunt for the Remedy office at 919 11 Ave SW (Beltline). One URL, six password-gated teams, 30 clues, real-time progress sync across team devices.
+A mobile-first, real-time scavenger hunt for the Remedy office at 919 11 Ave SW. One URL, 6 password-gated teams, 17 fully-playable clues.
 
 ## File layout
 
 ```
 scavenger-hunt/
 ├── index.html                       # Landing — team picker (or clue list once signed in)
-├── clue-01.html … clue-30.html      # 30 clues
+├── clue-01.html … clue-17.html      # 17 clues, each a full playable game
 ├── styles.css                       # Mobile-first Remedy-branded design
-├── script.js                        # All teams, clues, auth, sync logic
+├── script.js                        # Teams, clues data, auth, sync, modals
 ├── package.json                     # Dependency for the Netlify Function
-├── netlify.toml                     # Tells Netlify where the functions live
-├── netlify/
-│   └── functions/
-│       └── progress.mjs             # Cross-device progress sync
+├── netlify.toml                     # Where the functions live
+├── netlify/functions/progress.mjs   # Cross-device progress sync
 ├── assets/
 │   ├── remedy-logo.png
 │   └── remedy-r.png
 └── README.md
 ```
-
-## How teams work
-
-There's **one shared URL** for everyone. When a teammate opens it, they:
-1. Pick their team (one of six)
-2. Enter the team's password
-3. Land on their team's clue board
-
-All devices on the same team see the **same progress in real time** — when one teammate marks a clue solved, every other teammate's clue board updates within ~8 seconds.
-
-Team identity persists on the device, so a teammate doesn't re-enter the password unless they tap the **Switch** button in the corner.
 
 ## Teams
 
@@ -41,69 +28,62 @@ Team identity persists on the device, so a teammate doesn't re-enter the passwor
 | Compressors | 💨 | Purple | Power through pressure |
 | Pumps | 💧 | Teal | Keep the flow moving |
 | Ductworks | 🌬️ | Olive | Smooth airflow |
-| Manifolds | ⚙️ | Red | Many paths, one answer |
+| Fans | 🌀 | Red | Spin up the answers |
 
-## Setting team passwords
+Set team passwords in the `TEAMS` block of `script.js`. Empty string = no password (handy for testing).
 
-Open `script.js` and look for the `TEAMS` block near the top:
+## The 17 clues
 
-```js
-const TEAMS = {
-  boilers: { name: "Boilers", ..., password: "" },     // ← set passwords here
-  chillers: { name: "Chillers", ..., password: "" },
-  ...
-};
-```
+| # | Clue | Game | Answer / Spot |
+|---|------|------|----------------|
+| 1 | The Skyline Sentinel | Wordle | TOWER → Calgary Tower |
+| 2 | Pedestrian Promenade | Word Scramble | STEPHEN AVE |
+| 3 | Indoor Jungle | Anagram | DEVONIAN → Devonian Gardens |
+| 4 | Curious Giant | Emoji Puzzle | WONDERLAND |
+| 5 | Five-Ring Ground | Multiple-choice Trivia | 1988 → Olympic Plaza |
+| 6 | Cloud Cutter | Word Scramble | TELUS SKY |
+| 7 | The Whispering Span | Rhyming Riddle | Peace Bridge |
+| 8 | Caesar's Island | Caesar Cipher | Princess Island |
+| 9 | Two Words in French | Translation puzzle | Eau Claire |
+| 10 | Find the Threads | Connections (4×4 groups) | reveals China Town |
+| 11 | Gallows Walls | Hangman | FORT CALGARY |
+| 12 | Stacked Stories | Acrostic (7 mini-clues) | LIBRARY |
+| 13 | Home of the Flames | Rhyming Riddle | Saddledome |
+| 14 | Where We Came From | Math Puzzle | Old Remedy Office (host-configurable) |
+| 15 | Smile! Snap! Send! | Photo Challenge | Photo with BEN |
+| 16 | Where Was the Party? | Insider trivia | Christmas party venue (host-configurable) |
+| 17 | Up the Wall | Rebus | MEC Climbing Wall |
 
-- Empty string `""` = no password needed (handy for testing)
-- Any other string = teammates must enter that exact string
+**All 17 are playable end-to-end.** Two of them (Old Office address, Christmas party venue) accept any answer by default — edit the `ACCEPTED` block in `working/generate_clue_pages.py` and re-generate, OR just edit those two clue HTML files directly to enforce a specific answer.
 
-These are stored client-side, so they're not secret-grade — fine for a casual office event, not for protecting real data.
+## What's new in this version
 
-## Functioning demo puzzles
+- **17 clues** matching the host's location list (Calgary Tower, Stephen Ave, Devonian Gardens, Wonderland, Olympic Plaza, Telus Sky, Peace Bridge, Princess Island, Eau Claire, China Town, Fort Calgary, Public Library, Saddledome, Old Remedy Office, Photo with BEN, Christmas party, MEC Climbing).
+- **Every clue is a playable game** — no stubs.
+- **Smaller cards** — 3–6 per row depending on screen width.
+- **Compact hero** on the hunt view so more clues are visible.
+- **? button in the top bar** opens rules + tips as a slide-up modal.
+- **Tap your team tag** in the top bar to see the full team list with yours highlighted, plus a Switch button.
+- **Animations**: staggered fade-in for cards, pulsing glow on the next unsolved clue, bobbing team emoji, confetti burst when marking a solve.
+- **Renamed**: Manifolds → **Fans**.
 
-These 8 clues are fully playable in the demo:
+## How teams work
 
-| # | Clue | Type | Answer / Location |
-|---|------|------|--------------------|
-| 1 | The Twin-Block Park | Text Riddle | **Tomkins Park** |
-| 2 | Five-Letter Foothold | Wordle | **PARKS** → Central Memorial Park |
-| 3 | Find the Threads | Connections | reveals **Lougheed House** |
-| 4 | Letters in Chaos | Word Scramble | **BELTLINE** |
-| 5 | Caesar's Secret | Caesar Cipher | **SHELDON CHUMIR** |
-| 6 | Speak in Symbols | Emoji Puzzle | **MEC** |
-| 7 | Vault & Arsenal | Anagram | **Mewata Armoury** |
+One URL. Everyone scans the same QR code. They pick their team and enter the team password. From then on, the team identity sticks to their device, and any solve they mark shows up on every teammate's phone within ~8 seconds (via Netlify Function + Blobs).
 
-The other 22 clues are styled placeholders pointing at real Beltline-area spots (Studio Bell, Stephen Avenue, Calgary Tower, Phil & Sebastian, National on 17th, Last Best Brewing, Native Tongues, Major Tom, Diner Deluxe, etc.) so the hunt remains usable end-to-end. The host can build out the actual puzzle logic for any of these later.
+## Deploy to Netlify (GitHub-connected)
 
-## Deploy to Netlify
+Same as before — push the new files to your existing GitHub repo, Netlify auto-deploys. Step-by-step:
 
-This site needs Netlify (or equivalent) because of the Function for progress sync. Drag-and-drop a zip will not enable Functions — you need a git-connected deploy OR the Netlify CLI.
+1. Open your repo on GitHub
+2. Delete the old `clue-18.html` … `clue-30.html` files (we're down to 17 now). Tap each, hit the trash icon, commit.
+3. Click **Add file → Upload files**. Drag everything from this zip into the upload area (the new `clue-01.html`–`clue-17.html`, `index.html`, `styles.css`, `script.js`, and the `assets/` + `netlify/` folders).
+4. Commit. Netlify rebuilds within ~30 seconds.
 
-**Easiest path: connect a GitHub repo.**
+## Customizing
 
-1. Push this folder to a GitHub repo
-2. In Netlify → Add new site → Import from Git → select the repo
-3. Build settings are read from `netlify.toml` (`publish = "."`, `functions = "netlify/functions"`)
-4. Netlify installs the dependency in `package.json` (`@netlify/blobs`) automatically
-5. Deploy. Test by visiting `https://your-site.netlify.app/.netlify/functions/progress?team=boilers` — you should see `{"solved":[],"v":0}` (or similar). If you see that, sync is working.
-
-**If sync isn't working** (clues solve locally but other devices don't see them):
-
-- Check Netlify → Functions tab — `progress` should appear there with a green status
-- If it's missing or red, check the deploy log for errors during `npm install`
-- If you want to skip sync entirely (single-device mode), delete the `netlify/`, `package.json`, and `netlify.toml` files. The site still works; team progress just won't sync across devices.
-
-## Customising
-
-- **Change team names / colors / passwords** → edit `TEAMS` in `script.js`
-- **Change clue titles, answers, locations** → edit the `CLUES` array in `script.js` AND the corresponding `clue-XX.html` for the answer & location
-- **Build a real puzzle for one of the stub clues** → replace the `<div class="puzzle-box">…</div>` block in that `clue-XX.html`. The shared back link, solve button, and sync hooks keep working automatically
-- **Brand colors** → CSS variables at the top of `styles.css`
-- **Add / remove teams** → just edit the `TEAMS` object; the team picker generates from it
-
-## Notes
-
-- Progress is stored under `Netlify Blobs` keyed by team id. There's no auth on the API — anyone who knows a team id can read or post that team's state. This is fine for a one-day office event.
-- Photo uploads were removed in this version (they'd require photo storage + sharing infrastructure beyond Blobs).
-- The Netlify free tier covers ~125K function invocations per month, more than enough for a 6-team office hunt that polls every 8 seconds.
+- **Team passwords** → `TEAMS` block in `script.js`
+- **Team names / colors** → same block
+- **Old Remedy Office address (clue 14)** → open `clue-14.html`, find `const ANSWER` and `const ACCEPT`, and set the actual address
+- **Christmas party venue (clue 16)** → same approach in `clue-16.html`
+- **Wonder which emoji clue gave you grief?** → search `clue-XX.html` for the puzzle body and tweak directly

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1c1b1f" />
-  <title>08 · Twin Tiles</title>
+  <title>08 · Caesar's Island</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,39 +18,73 @@
     <a href="index.html" class="back-link">← Back to clues</a>
 
     <div class="clue-header">
-      <div class="clue-number-large">Clue 08 of 30</div>
-      <h1>Twin Tiles</h1>
-      <span class="clue-type-pill" style="color: #ff6b9a; border: 1px solid #ff6b9a66; background: #ff6b9a1a;">Memory Match</span>
+      <div class="clue-number-large">Clue 08 of 17</div>
+      <h1>Caesar's Island</h1>
+      <span class="clue-type-pill" style="color: #A4B54B; border: 1px solid #A4B54B66; background: #A4B54B1a;">Caesar Cipher</span>
     </div>
 
     
-    <div class="puzzle-box center">
-      <div class="placeholder-icon">🃏</div>
-      <h2>Memory Match</h2>
-      <p>Flip pairs to reveal the answer.</p>
-      <p style="margin-top: 14px; font-size: 0.82rem; color: var(--orange);">
-        <em>Demo placeholder — puzzle to be built before the event.</em>
-      </p>
+    <div class="puzzle-box">
+      <h2 style="text-align: center;">Decode the cipher</h2>
+      <p style="text-align: center;">Every letter has been shifted by the same amount. Rotate the dial until it reads English.</p>
+      <div class="cipher-text" id="cipherText"></div>
+      <div class="shift-control">
+        <button id="shiftDown" type="button">−</button>
+        <div class="shift-val"><small>Shift</small><span id="shiftVal">0</span></div>
+        <button id="shiftUp" type="button">+</button>
+      </div>
+      <div class="answer-row">
+        <input type="text" id="answerInput" class="text-input" placeholder="Decoded text..." autocomplete="off" />
+        <button class="btn btn-orange" id="checkBtn" type="button">Check</button>
+      </div>
       <div class="feedback" id="feedback"></div>
     </div>
-
+    
 
     <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
   </main>
 
+  <!-- Help modal -->
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet help-content">
+      <div class="modal-handle"></div>
+      <h3>Quick help</h3>
+      <p class="help-sub">Stuck? Here's the gist of this clue.</p>
+      <ul>
+        <li>Solve the puzzle on this page.</li>
+        <li>The puzzle reveals a Calgary location.</li>
+        <li>Walk there and take a team photo.</li>
+        <li>Tap "I solved it ✓" to mark it done.</li>
+      </ul>
+      <button class="btn btn-primary modal-close-btn" id="helpClose" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- Team modal -->
+  <div class="modal-overlay" id="teamModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-family: 'Fraunces', Georgia, serif; margin: 0 0 4px;">Your team</h3>
+      <p class="help-sub" style="margin: 0 0 12px;">All teams in the hunt.</p>
+      <div class="team-modal-list" id="teamModalList"></div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="teamClose" type="button">Close</button>
+        <button class="btn btn-orange" id="teamSwitch" type="button">Switch team</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     const CLUE_NUM = 8;
-    const ANSWER = "Connaught";
-    const LOCATION = "Connaught Park";
+    const ANSWER = "PRINCESS ISLAND";
+    const ACCEPT = ["PRINCESS ISLAND", "PRINCESS ISLAND PARK", "PRINCES ISLAND", "PRINCES ISLAND PARK"];
+    const LOCATION = "Princess Island Park";
 
-    // If no team is set, route home
-    if (!window.REMEDY.getTeam()) {
-      window.location.href = "index.html";
-    }
+    if (!window.REMEDY.getTeam()) { window.location.href = "index.html"; }
 
     const solveBtn = document.getElementById("solveBtn");
-    async function refreshSolve() {
+    function refreshSolve() {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) {
         solveBtn.textContent = "Solved ✓ (tap to undo)";
@@ -62,28 +96,38 @@
     }
     solveBtn.addEventListener("click", async () => {
       const solved = window.REMEDY.loadProgress();
-      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
-      else solved.add(CLUE_NUM);
+      const wasSolved = solved.has(CLUE_NUM);
+      if (wasSolved) solved.delete(CLUE_NUM); else solved.add(CLUE_NUM);
       solveBtn.textContent = "Saving…";
       await window.REMEDY.saveProgress(solved);
       refreshSolve();
+      if (!wasSolved) window.REMEDY.confettiBurst();
     });
 
-    // Sync state from server on load (so multiple devices stay in sync)
-    (async () => {
-      await window.REMEDY.fetchProgress();
-      refreshSolve();
-    })();
+    (async () => { await window.REMEDY.fetchProgress(); refreshSolve(); })();
     refreshSolve();
 
-    // Puzzle-specific code
     
-    const feedback = document.getElementById("feedback");
-    if (feedback) {
-      feedback.className = "feedback show";
-      feedback.style.background = "#fff3e0"; feedback.style.color = "#8a4a14"; feedback.style.border = "1px solid #ffd6a3";
-      feedback.textContent = `Demo placeholder for ${"Connaught Park"}. Tap "I solved it" to mark this clue done.`;
+    const SHIFT_USED = 7;
+    function shift(s, k) {
+      return s.split("").map(ch => { const code = ch.charCodeAt(0); if (code >= 65 && code <= 90) return String.fromCharCode((code - 65 + k + 26) % 26 + 65); return ch; }).join("");
     }
+    const ENCRYPTED = shift(ANSWER.toUpperCase(), SHIFT_USED);
+    const cipherText = document.getElementById("cipherText");
+    const shiftValEl = document.getElementById("shiftVal");
+    const input = document.getElementById("answerInput");
+    const feedback = document.getElementById("feedback");
+    let currentShift = 0;
+    function render() { cipherText.textContent = shift(ENCRYPTED, -currentShift); shiftValEl.textContent = currentShift; }
+    document.getElementById("shiftUp").addEventListener("click", () => { currentShift = (currentShift + 1) % 26; render(); });
+    document.getElementById("shiftDown").addEventListener("click", () => { currentShift = (currentShift - 1 + 26) % 26; render(); });
+    const norm = s => (s || "").replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+    document.getElementById("checkBtn").addEventListener("click", () => {
+      if (ACCEPT.some(a => norm(input.value) === norm(a))) { feedback.className = "feedback show correct"; feedback.textContent = `Correct! Head to ${LOCATION}.`; }
+      else { feedback.className = "feedback show wrong"; feedback.textContent = "Not yet — keep adjusting the shift."; }
+    });
+    input.addEventListener("keydown", e => { if (e.key === "Enter") document.getElementById("checkBtn").click(); });
+    render();
 
   </script>
 </body>

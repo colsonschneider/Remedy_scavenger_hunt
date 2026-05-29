@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1c1b1f" />
-  <title>17 · Slide to Solve</title>
+  <title>17 · Up the Wall</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,39 +18,70 @@
     <a href="index.html" class="back-link">← Back to clues</a>
 
     <div class="clue-header">
-      <div class="clue-number-large">Clue 17 of 30</div>
-      <h1>Slide to Solve</h1>
-      <span class="clue-type-pill" style="color: #ff6b9a; border: 1px solid #ff6b9a66; background: #ff6b9a1a;">Sliding Puzzle</span>
+      <div class="clue-number-large">Clue 17 of 17</div>
+      <h1>Up the Wall</h1>
+      <span class="clue-type-pill" style="color: #F26921; border: 1px solid #F2692166; background: #F269211a;">Rebus</span>
     </div>
 
     
     <div class="puzzle-box center">
-      <div class="placeholder-icon">🔢</div>
-      <h2>Sliding Puzzle</h2>
-      <p>Slide the tiles into order.</p>
-      <p style="margin-top: 14px; font-size: 0.82rem; color: var(--orange);">
-        <em>Demo placeholder — puzzle to be built before the event.</em>
-      </p>
+      <h2>Read the rebus</h2>
+      <div class="rebus-row">
+        <span>⛰️</span><span class="rebus-text">+</span><span>⚙️</span><span class="rebus-text">+</span><span>🏬</span>
+      </div>
+      <p>Three letters. An outdoor gear store with a tall climbing wall inside.</p>
+      <div class="answer-row">
+        <input type="text" id="answerInput" class="text-input" placeholder="3 letters" autocomplete="off" maxlength="6" style="text-transform: uppercase; text-align: center; letter-spacing: 0.3em;" />
+        <button class="btn btn-orange" id="checkBtn" type="button">Check</button>
+      </div>
       <div class="feedback" id="feedback"></div>
     </div>
-
+    
 
     <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
   </main>
 
+  <!-- Help modal -->
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet help-content">
+      <div class="modal-handle"></div>
+      <h3>Quick help</h3>
+      <p class="help-sub">Stuck? Here's the gist of this clue.</p>
+      <ul>
+        <li>Solve the puzzle on this page.</li>
+        <li>The puzzle reveals a Calgary location.</li>
+        <li>Walk there and take a team photo.</li>
+        <li>Tap "I solved it ✓" to mark it done.</li>
+      </ul>
+      <button class="btn btn-primary modal-close-btn" id="helpClose" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- Team modal -->
+  <div class="modal-overlay" id="teamModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-family: 'Fraunces', Georgia, serif; margin: 0 0 4px;">Your team</h3>
+      <p class="help-sub" style="margin: 0 0 12px;">All teams in the hunt.</p>
+      <div class="team-modal-list" id="teamModalList"></div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="teamClose" type="button">Close</button>
+        <button class="btn btn-orange" id="teamSwitch" type="button">Switch team</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     const CLUE_NUM = 17;
-    const ANSWER = "Stephen Avenue";
-    const LOCATION = "Stephen Avenue";
+    const ANSWER = "MEC";
+    const ACCEPT = ["MEC", "MEC CLIMBING", "MOUNTAIN EQUIPMENT"];
+    const LOCATION = "MEC Climbing Wall";
 
-    // If no team is set, route home
-    if (!window.REMEDY.getTeam()) {
-      window.location.href = "index.html";
-    }
+    if (!window.REMEDY.getTeam()) { window.location.href = "index.html"; }
 
     const solveBtn = document.getElementById("solveBtn");
-    async function refreshSolve() {
+    function refreshSolve() {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) {
         solveBtn.textContent = "Solved ✓ (tap to undo)";
@@ -62,28 +93,35 @@
     }
     solveBtn.addEventListener("click", async () => {
       const solved = window.REMEDY.loadProgress();
-      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
-      else solved.add(CLUE_NUM);
+      const wasSolved = solved.has(CLUE_NUM);
+      if (wasSolved) solved.delete(CLUE_NUM); else solved.add(CLUE_NUM);
       solveBtn.textContent = "Saving…";
       await window.REMEDY.saveProgress(solved);
       refreshSolve();
+      if (!wasSolved) window.REMEDY.confettiBurst();
     });
 
-    // Sync state from server on load (so multiple devices stay in sync)
-    (async () => {
-      await window.REMEDY.fetchProgress();
-      refreshSolve();
-    })();
+    (async () => { await window.REMEDY.fetchProgress(); refreshSolve(); })();
     refreshSolve();
 
-    // Puzzle-specific code
     
+    const checkBtn = document.getElementById("checkBtn");
+    const answerInput = document.getElementById("answerInput");
     const feedback = document.getElementById("feedback");
-    if (feedback) {
-      feedback.className = "feedback show";
-      feedback.style.background = "#fff3e0"; feedback.style.color = "#8a4a14"; feedback.style.border = "1px solid #ffd6a3";
-      feedback.textContent = `Demo placeholder for ${"Stephen Avenue"}. Tap "I solved it" to mark this clue done.`;
+    const norm = s => (s || "").replace(/[^A-Za-z0-9]/g, "").toLowerCase();
+    function check() {
+      if (!answerInput.value.trim()) return;
+      const ok = ACCEPT.some(a => norm(answerInput.value) === norm(a));
+      if (ok) {
+        feedback.className = "feedback show correct";
+        feedback.textContent = `Correct! Head to ${LOCATION}.`;
+      } else {
+        feedback.className = "feedback show wrong";
+        feedback.textContent = "Not quite. Try again.";
+      }
     }
+    checkBtn.addEventListener("click", check);
+    answerInput.addEventListener("keydown", e => { if (e.key === "Enter") check(); });
 
   </script>
 </body>

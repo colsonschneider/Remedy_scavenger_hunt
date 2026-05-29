@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1c1b1f" />
-  <title>02 · Five-Letter Foothold</title>
+  <title>02 · Pedestrian Promenade</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,19 +18,22 @@
     <a href="index.html" class="back-link">← Back to clues</a>
 
     <div class="clue-header">
-      <div class="clue-number-large">Clue 02 of 30</div>
-      <h1>Five-Letter Foothold</h1>
-      <span class="clue-type-pill" style="color: #6dc4ff; border: 1px solid #6dc4ff66; background: #6dc4ff1a;">Wordle Game</span>
+      <div class="clue-number-large">Clue 02 of 17</div>
+      <h1>Pedestrian Promenade</h1>
+      <span class="clue-type-pill" style="color: #6dc4ff; border: 1px solid #6dc4ff66; background: #6dc4ff1a;">Word Scramble</span>
     </div>
 
     
     <div class="puzzle-box center">
-      <h2>Guess the 5-letter word</h2>
-      <p>Olive = right letter, right spot. Orange = right letter, wrong spot. Dark = not in word. Unlimited guesses.</p>
-      <div class="wordle-grid" id="wordleGrid"></div>
-      <div class="answer-row" style="justify-content: center;">
-        <input type="text" id="wordleInput" class="text-input" maxlength="5" placeholder="5 letters" autocomplete="off" style="text-transform: uppercase; text-align: center; letter-spacing: 0.3em;" />
-        <button class="btn btn-orange" id="wordleGuess" type="button">Guess</button>
+      <h2>Unscramble the letters</h2>
+      <p>Tap letters in order. Tap a placed tile to send it back.</p>
+      <div class="scramble-divider">Your answer</div>
+      <div class="scramble-row" id="scramblePlaced"></div>
+      <div class="scramble-divider">Pool</div>
+      <div class="scramble-row" id="scramblePool"></div>
+      <div class="conn-controls">
+        <button class="btn btn-ghost" id="scrambleClear" type="button">Reset</button>
+        <button class="btn btn-orange" id="scrambleCheck" type="button">Check</button>
       </div>
       <div class="feedback" id="feedback"></div>
     </div>
@@ -39,19 +42,47 @@
     <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
   </main>
 
+  <!-- Help modal -->
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet help-content">
+      <div class="modal-handle"></div>
+      <h3>Quick help</h3>
+      <p class="help-sub">Stuck? Here's the gist of this clue.</p>
+      <ul>
+        <li>Solve the puzzle on this page.</li>
+        <li>The puzzle reveals a Calgary location.</li>
+        <li>Walk there and take a team photo.</li>
+        <li>Tap "I solved it ✓" to mark it done.</li>
+      </ul>
+      <button class="btn btn-primary modal-close-btn" id="helpClose" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- Team modal -->
+  <div class="modal-overlay" id="teamModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-family: 'Fraunces', Georgia, serif; margin: 0 0 4px;">Your team</h3>
+      <p class="help-sub" style="margin: 0 0 12px;">All teams in the hunt.</p>
+      <div class="team-modal-list" id="teamModalList"></div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="teamClose" type="button">Close</button>
+        <button class="btn btn-orange" id="teamSwitch" type="button">Switch team</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     const CLUE_NUM = 2;
-    const ANSWER = "PARKS";
-    const LOCATION = "Central Memorial Park";
+    const ANSWER = "STEPHEN AVE";
+    const ACCEPT = ["STEPHEN AVE", "STEPHEN AVENUE", "STEPHEN AVE WALK", "STEPHEN AVENUE WALK"];
+    const LOCATION = "Stephen Avenue Walk";
 
-    // If no team is set, route home
-    if (!window.REMEDY.getTeam()) {
-      window.location.href = "index.html";
-    }
+    if (!window.REMEDY.getTeam()) { window.location.href = "index.html"; }
 
     const solveBtn = document.getElementById("solveBtn");
-    async function refreshSolve() {
+    function refreshSolve() {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) {
         solveBtn.textContent = "Solved ✓ (tap to undo)";
@@ -63,66 +94,53 @@
     }
     solveBtn.addEventListener("click", async () => {
       const solved = window.REMEDY.loadProgress();
-      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
-      else solved.add(CLUE_NUM);
+      const wasSolved = solved.has(CLUE_NUM);
+      if (wasSolved) solved.delete(CLUE_NUM); else solved.add(CLUE_NUM);
       solveBtn.textContent = "Saving…";
       await window.REMEDY.saveProgress(solved);
       refreshSolve();
+      if (!wasSolved) window.REMEDY.confettiBurst();
     });
 
-    // Sync state from server on load (so multiple devices stay in sync)
-    (async () => {
-      await window.REMEDY.fetchProgress();
-      refreshSolve();
-    })();
+    (async () => { await window.REMEDY.fetchProgress(); refreshSolve(); })();
     refreshSolve();
 
-    // Puzzle-specific code
     
-    const WORD = ("PARKS").toUpperCase();
-    const MAX_ROWS = 12;
-    const grid = document.getElementById("wordleGrid");
-    const input = document.getElementById("wordleInput");
-    const guessBtn = document.getElementById("wordleGuess");
+    const ANSWER_NORM = ANSWER.toUpperCase().replace(/[^A-Z]/g, "");
+    const placed = []; const pool = ANSWER_NORM.split("");
+    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+    const used = Array(pool.length).fill(false);
+    const placedEl = document.getElementById("scramblePlaced");
+    const poolEl = document.getElementById("scramblePool");
+    const checkBtn = document.getElementById("scrambleCheck");
+    const clearBtn = document.getElementById("scrambleClear");
     const feedback = document.getElementById("feedback");
-    let row = 0;
-    function buildGrid() {
-      grid.innerHTML = "";
-      for (let r = 0; r < MAX_ROWS; r++)
-        for (let c = 0; c < 5; c++) {
-          const t = document.createElement("div");
-          t.className = "wordle-tile"; t.id = `wt-${r}-${c}`;
-          grid.appendChild(t);
-        }
-    }
-    function evaluate(guess) {
-      const result = Array(5).fill("absent");
-      const target = WORD.split(""); const used = Array(5).fill(false);
-      for (let i = 0; i < 5; i++) if (guess[i] === target[i]) { result[i] = "correct"; used[i] = true; }
-      for (let i = 0; i < 5; i++) {
-        if (result[i] === "correct") continue;
-        for (let j = 0; j < 5; j++) if (!used[j] && guess[i] === target[j]) { result[i] = "present"; used[j] = true; break; }
+    function render() {
+      placedEl.innerHTML = "";
+      placed.forEach((p, idx) => {
+        const t = document.createElement("div");
+        t.className = "scramble-tile placed"; t.textContent = pool[p.poolIdx];
+        t.addEventListener("click", () => { used[p.poolIdx] = false; placed.splice(idx, 1); render(); });
+        placedEl.appendChild(t);
+      });
+      for (let i = placed.length; i < ANSWER_NORM.length; i++) {
+        const t = document.createElement("div"); t.className = "scramble-tile gap"; placedEl.appendChild(t);
       }
-      return result;
+      poolEl.innerHTML = "";
+      pool.forEach((ch, i) => {
+        const t = document.createElement("div");
+        t.className = "scramble-tile" + (used[i] ? " used" : ""); t.textContent = ch;
+        t.addEventListener("click", () => { if (used[i] || placed.length >= ANSWER_NORM.length) return; used[i] = true; placed.push({ poolIdx: i }); render(); });
+        poolEl.appendChild(t);
+      });
     }
-    function submitGuess() {
-      const guess = input.value.toUpperCase();
-      if (guess.length !== 5 || !/^[A-Z]{5}$/.test(guess)) { feedback.className = "feedback show wrong"; feedback.textContent = "Enter 5 letters."; return; }
-      if (row >= MAX_ROWS) return;
-      const result = evaluate(guess);
-      for (let c = 0; c < 5; c++) {
-        const tile = document.getElementById(`wt-${row}-${c}`);
-        tile.textContent = guess[c]; tile.classList.add("filled", result[c]);
-      }
-      if (guess === WORD) {
-        feedback.className = "feedback show correct";
-        feedback.textContent = `Correct! Head to ${"Central Memorial Park"}.`;
-        input.disabled = true;
-      } else { row++; input.value = ""; input.focus(); }
-    }
-    guessBtn.addEventListener("click", submitGuess);
-    input.addEventListener("keydown", e => { if (e.key === "Enter") submitGuess(); });
-    buildGrid();
+    checkBtn.addEventListener("click", () => {
+      const guess = placed.map(p => pool[p.poolIdx]).join("");
+      if (guess === ANSWER_NORM) { feedback.className = "feedback show correct"; feedback.textContent = `Correct! Head to ${LOCATION}.`; }
+      else { feedback.className = "feedback show wrong"; feedback.textContent = "Not quite — try a different order."; }
+    });
+    clearBtn.addEventListener("click", () => { placed.length = 0; for (let i = 0; i < used.length; i++) used[i] = false; render(); });
+    render();
 
   </script>
 </body>

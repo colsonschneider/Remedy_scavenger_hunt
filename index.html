@@ -14,15 +14,15 @@
 <body>
   <nav class="topbar" id="topbar"></nav>
 
-  <!-- ========== AUTH VIEW (no team selected) ========== -->
+  <!-- ========== AUTH VIEW ========== -->
   <div id="authView">
     <header class="hero">
       <div class="hero-inner">
-        <span class="eyebrow"><span class="dot"></span>Beltline · Calgary</span>
+        <span class="eyebrow"><span class="dot"></span>Downtown · Calgary</span>
         <h1 class="title">The <span class="accent">Remedy</span> Hunt</h1>
         <p class="tagline">
-          Thirty mechanical mysteries hidden across the Beltline.
-          Solve each puzzle, find the Calgary spot it points to,
+          Seventeen mechanical mysteries hidden across downtown Calgary.
+          Solve each puzzle, find the spot it points to,
           and beat the other teams back to <strong>919 11 Ave SW</strong>.
         </p>
       </div>
@@ -34,29 +34,17 @@
         <span class="count">6 teams</span>
       </div>
       <section class="team-list" id="teamPicker" aria-label="Teams"></section>
-
-      <section class="info-card">
-        <h3>How it works</h3>
-        <ol>
-          <li>Tap your team and enter the password your host gave you.</li>
-          <li>You'll land on your team's clue board.</li>
-          <li>Open any clue, solve the puzzle to reveal a Calgary spot.</li>
-          <li>Walk to the spot and tap <strong>"I solved it"</strong>.</li>
-          <li>The whole team sees every solve in real time.</li>
-        </ol>
-        <p class="note">Tip: your team only needs <strong>one shared password</strong>. Anyone with it can join the team's progress board.</p>
-      </section>
     </main>
   </div>
 
-  <!-- ========== HUNT VIEW (team is signed in) ========== -->
+  <!-- ========== HUNT VIEW ========== -->
   <div id="huntView" style="display: none;">
-    <header class="hero">
+    <header class="hero hero-compact">
       <div class="hero-inner" id="teamWelcome"></div>
       <div class="progress-wrap" style="position: relative; z-index: 1;">
         <div class="progress-meta">
-          <span><strong id="progressLabel">0 of 30</strong> solved</span>
-          <span>Synced live</span>
+          <span><strong id="progressLabel">0 of 17</strong> solved</span>
+          <span class="live-pulse">Live</span>
         </div>
         <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
       </div>
@@ -65,7 +53,7 @@
     <main class="container">
       <div class="section-head">
         <h2>Your clues</h2>
-        <span class="count" id="unsolvedCount">30 remaining</span>
+        <span class="count" id="unsolvedCount">17 remaining</span>
       </div>
 
       <section class="clue-grid" id="clueGridUnsolved" aria-label="Unsolved clues"></section>
@@ -75,19 +63,10 @@
       </div>
 
       <section class="clue-grid" id="clueGridSolved" aria-label="Solved clues"></section>
-
-      <section class="info-card">
-        <h3>Reminders</h3>
-        <ul>
-          <li>Progress is shared with your whole team — solves show up within seconds.</li>
-          <li>Clues can be tackled in any order. Save clue 30 for last.</li>
-          <li>Use the <strong>Switch</strong> button in the corner to change teams.</li>
-        </ul>
-      </section>
     </main>
   </div>
 
-  <!-- ========== PASSWORD MODAL ========== -->
+  <!-- ========== AUTH MODAL ========== -->
   <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal-sheet">
       <div class="modal-handle"></div>
@@ -104,6 +83,50 @@
       <div class="modal-row">
         <button class="btn btn-ghost" id="modalCancel" type="button">Cancel</button>
         <button class="btn btn-orange" id="modalSubmit" type="button">Enter</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== HELP MODAL (rules + tips) ========== -->
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet help-content">
+      <div class="modal-handle"></div>
+      <h3>How it works</h3>
+      <p class="help-sub">Quick refresher — beat the other teams to all 17 clues.</p>
+      <ol>
+        <li>Tap a clue card to open the puzzle.</li>
+        <li>Solve the puzzle — it reveals a Calgary location.</li>
+        <li>Walk there and take a team photo at the spot.</li>
+        <li>Come back to the clue page and tap <strong>"I solved it ✓"</strong>.</li>
+        <li>Your whole team sees the solve within seconds.</li>
+      </ol>
+
+      <h4>Tips</h4>
+      <ul>
+        <li>Clues can be solved in any order.</li>
+        <li>Stuck? Skip it and come back later.</li>
+        <li>Save clue #17 for the finale.</li>
+        <li>The Switch button in the corner changes teams.</li>
+      </ul>
+
+      <div class="tip">
+        <strong>Heads up:</strong> Your team's progress is shared in real time across every teammate's phone.
+      </div>
+
+      <button class="btn btn-primary modal-close-btn" id="helpClose" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- ========== TEAM MODAL (see all teams + current) ========== -->
+  <div class="modal-overlay" id="teamModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-family: 'Fraunces', Georgia, serif; margin: 0 0 4px;">Your team</h3>
+      <p class="help-sub" style="margin: 0 0 12px;">Here's where you stand — and the rest of the teams.</p>
+      <div class="team-modal-list" id="teamModalList"></div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="teamClose" type="button">Close</button>
+        <button class="btn btn-orange" id="teamSwitch" type="button">Switch team</button>
       </div>
     </div>
   </div>

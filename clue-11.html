@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#1c1b1f" />
-  <title>11 · Roast & Bean</title>
+  <title>11 · Gallows Walls</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,39 +18,66 @@
     <a href="index.html" class="back-link">← Back to clues</a>
 
     <div class="clue-header">
-      <div class="clue-number-large">Clue 11 of 30</div>
-      <h1>Roast & Bean</h1>
-      <span class="clue-type-pill" style="color: #6dc4ff; border: 1px solid #6dc4ff66; background: #6dc4ff1a;">Anagram</span>
+      <div class="clue-number-large">Clue 11 of 17</div>
+      <h1>Gallows Walls</h1>
+      <span class="clue-type-pill" style="color: #ff6b9a; border: 1px solid #ff6b9a66; background: #ff6b9a1a;">Hangman</span>
     </div>
 
     
     <div class="puzzle-box center">
-      <div class="placeholder-icon">🔄</div>
-      <h2>Anagram</h2>
-      <p>Unscramble to find a popular roastery.</p>
-      <p style="margin-top: 14px; font-size: 0.82rem; color: var(--orange);">
-        <em>Demo placeholder — puzzle to be built before the event.</em>
-      </p>
+      <h2>Guess the location</h2>
+      <p>One letter at a time. You have <strong id="hmLives">8</strong> wrong guesses before it's game over.</p>
+      <div class="hangman-word" id="hangmanWord"></div>
+      <div class="hangman-meta">Wrong guesses: <strong id="hmWrong">0</strong> / 8</div>
+      <div class="hangman-keyboard" id="hangmanKeyboard"></div>
       <div class="feedback" id="feedback"></div>
     </div>
-
+    
 
     <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
   </main>
 
+  <!-- Help modal -->
+  <div class="modal-overlay" id="helpModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet help-content">
+      <div class="modal-handle"></div>
+      <h3>Quick help</h3>
+      <p class="help-sub">Stuck? Here's the gist of this clue.</p>
+      <ul>
+        <li>Solve the puzzle on this page.</li>
+        <li>The puzzle reveals a Calgary location.</li>
+        <li>Walk there and take a team photo.</li>
+        <li>Tap "I solved it ✓" to mark it done.</li>
+      </ul>
+      <button class="btn btn-primary modal-close-btn" id="helpClose" type="button">Got it</button>
+    </div>
+  </div>
+
+  <!-- Team modal -->
+  <div class="modal-overlay" id="teamModal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <h3 style="font-family: 'Fraunces', Georgia, serif; margin: 0 0 4px;">Your team</h3>
+      <p class="help-sub" style="margin: 0 0 12px;">All teams in the hunt.</p>
+      <div class="team-modal-list" id="teamModalList"></div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="teamClose" type="button">Close</button>
+        <button class="btn btn-orange" id="teamSwitch" type="button">Switch team</button>
+      </div>
+    </div>
+  </div>
+
   <script src="script.js"></script>
   <script>
     const CLUE_NUM = 11;
-    const ANSWER = "Phil and Sebastian";
-    const LOCATION = "Phil & Sebastian (Beltline)";
+    const ANSWER = "FORT CALGARY";
+    const ACCEPT = ["FORT CALGARY"];
+    const LOCATION = "Fort Calgary";
 
-    // If no team is set, route home
-    if (!window.REMEDY.getTeam()) {
-      window.location.href = "index.html";
-    }
+    if (!window.REMEDY.getTeam()) { window.location.href = "index.html"; }
 
     const solveBtn = document.getElementById("solveBtn");
-    async function refreshSolve() {
+    function refreshSolve() {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) {
         solveBtn.textContent = "Solved ✓ (tap to undo)";
@@ -62,28 +89,63 @@
     }
     solveBtn.addEventListener("click", async () => {
       const solved = window.REMEDY.loadProgress();
-      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
-      else solved.add(CLUE_NUM);
+      const wasSolved = solved.has(CLUE_NUM);
+      if (wasSolved) solved.delete(CLUE_NUM); else solved.add(CLUE_NUM);
       solveBtn.textContent = "Saving…";
       await window.REMEDY.saveProgress(solved);
       refreshSolve();
+      if (!wasSolved) window.REMEDY.confettiBurst();
     });
 
-    // Sync state from server on load (so multiple devices stay in sync)
-    (async () => {
-      await window.REMEDY.fetchProgress();
-      refreshSolve();
-    })();
+    (async () => { await window.REMEDY.fetchProgress(); refreshSolve(); })();
     refreshSolve();
 
-    // Puzzle-specific code
     
+    const TARGET = ANSWER.toUpperCase();
+    const word = document.getElementById("hangmanWord");
+    const keyboard = document.getElementById("hangmanKeyboard");
+    const wrongEl = document.getElementById("hmWrong");
+    const livesEl = document.getElementById("hmLives");
     const feedback = document.getElementById("feedback");
-    if (feedback) {
-      feedback.className = "feedback show";
-      feedback.style.background = "#fff3e0"; feedback.style.color = "#8a4a14"; feedback.style.border = "1px solid #ffd6a3";
-      feedback.textContent = `Demo placeholder for ${"Phil & Sebastian (Beltline)"}. Tap "I solved it" to mark this clue done.`;
+    const guessed = new Set(); let wrong = 0; const MAX = 8;
+    function renderWord() {
+      word.innerHTML = "";
+      [...TARGET].forEach(ch => {
+        const el = document.createElement("div");
+        if (ch === " ") el.className = "hangman-letter space";
+        else { el.className = "hangman-letter"; el.textContent = guessed.has(ch) ? ch : ""; }
+        word.appendChild(el);
+      });
     }
+    function renderKeyboard() {
+      keyboard.innerHTML = "";
+      for (let c = 65; c <= 90; c++) {
+        const ch = String.fromCharCode(c);
+        const key = document.createElement("button");
+        key.className = "hangman-key"; key.textContent = ch; key.type = "button";
+        if (guessed.has(ch)) {
+          key.disabled = true;
+          key.classList.add(TARGET.includes(ch) ? "right" : "wrong");
+        }
+        key.addEventListener("click", () => guess(ch));
+        keyboard.appendChild(key);
+      }
+    }
+    function guess(ch) {
+      if (guessed.has(ch)) return;
+      guessed.add(ch);
+      if (!TARGET.includes(ch)) wrong++;
+      wrongEl.textContent = wrong; livesEl.textContent = MAX - wrong;
+      renderWord(); renderKeyboard();
+      const won = [...TARGET].every(c => c === " " || guessed.has(c));
+      if (won) { feedback.className = "feedback show correct"; feedback.textContent = `Solved! Head to ${LOCATION}.`; }
+      else if (wrong >= MAX) {
+        feedback.className = "feedback show wrong";
+        feedback.textContent = "Out of lives! Tap a clue card to reset.";
+      }
+    }
+    document.addEventListener("keydown", e => { if (/^[a-zA-Z]$/.test(e.key)) guess(e.key.toUpperCase()); });
+    renderWord(); renderKeyboard();
 
   </script>
 </body>

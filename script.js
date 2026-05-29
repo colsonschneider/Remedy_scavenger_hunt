@@ -1,118 +1,55 @@
 // ============================================================
 // REMEDY ENGINEERING — Scavenger Hunt
-// Mobile-first, single-page entry with password gating
+// 6 password-gated teams, 17 clues, real-time team sync
 // ============================================================
 
 // -------- TEAMS --------
-// Edit the password field for each team before the event.
-// Leave password blank ("") to skip auth (handy while testing).
 const TEAMS = {
   boilers: {
-    name: "Boilers",
-    emoji: "🔥",
-    color: "#F26921",
-    tagline: "Hot under pressure.",
-    password: "",
+    name: "Boilers", emoji: "🔥", color: "#F26921",
+    tagline: "Hot under pressure.", password: "",
   },
   chillers: {
-    name: "Chillers",
-    emoji: "❄️",
-    color: "#3aa1d5",
-    tagline: "Cool under pressure.",
-    password: "",
+    name: "Chillers", emoji: "❄️", color: "#3aa1d5",
+    tagline: "Cool under pressure.", password: "",
   },
   compressors: {
-    name: "Compressors",
-    emoji: "💨",
-    color: "#8a6dd5",
-    tagline: "Power through pressure.",
-    password: "",
+    name: "Compressors", emoji: "💨", color: "#8a6dd5",
+    tagline: "Power through pressure.", password: "",
   },
   pumps: {
-    name: "Pumps",
-    emoji: "💧",
-    color: "#21A8B5",
-    tagline: "Keep the flow moving.",
-    password: "",
+    name: "Pumps", emoji: "💧", color: "#21A8B5",
+    tagline: "Keep the flow moving.", password: "",
   },
   ductworks: {
-    name: "Ductworks",
-    emoji: "🌬️",
-    color: "#A4B54B",
-    tagline: "Smooth airflow, smooth solving.",
-    password: "",
+    name: "Ductworks", emoji: "🌬️", color: "#A4B54B",
+    tagline: "Smooth airflow, smooth solving.", password: "",
   },
-  manifolds: {
-    name: "Manifolds",
-    emoji: "⚙️",
-    color: "#c0392b",
-    tagline: "Many paths, one answer.",
-    password: "",
+  fans: {
+    name: "Fans", emoji: "🌀", color: "#c0392b",
+    tagline: "Spin up the answers.", password: "",
   },
 };
 
-// -------- CLUES (Beltline-centric, 919 11 Ave SW) --------
+// -------- CLUES (17 downtown Calgary spots) --------
 const CLUES = [
-  { n: 1,  title: "The Twin-Block Park",        type: "Text Riddle",          cat: "word",   icon: "🗝️", location: "Tomkins Park (8 St & 17 Ave SW)",   answer: "Tomkins Park",        func: true,
-    hint: "A short rhyming riddle about a nearby park." },
-  { n: 2,  title: "Five-Letter Foothold",       type: "Wordle Game",          cat: "word",   icon: "🔠", location: "Central Memorial Park",              answer: "PARKS",                func: true,
-    hint: "Guess the 5-letter word with unlimited tries." },
-  { n: 3,  title: "Find the Threads",           type: "Connections",          cat: "logic",  icon: "🧩", location: "Lougheed House",                     answer: "Lougheed House",       func: true,
-    hint: "Group 16 Calgary things into 4 hidden categories." },
-  { n: 4,  title: "Letters in Chaos",           type: "Word Scramble",        cat: "word",   icon: "🔤", location: "Beltline neighbourhood sign",        answer: "BELTLINE",             func: true,
-    hint: "Rearrange the letters to spell your own neighbourhood." },
-  { n: 5,  title: "Caesar's Secret",            type: "Cipher Decoder",       cat: "code",   icon: "🏛️", location: "Sheldon M. Chumir Health Centre",   answer: "SHELDON CHUMIR",       func: true,
-    hint: "Decode the Caesar cipher to reveal a building." },
-  { n: 6,  title: "Speak in Symbols",           type: "Emoji Puzzle",         cat: "visual", icon: "🤔", location: "Mountain Equipment Co-op (MEC)",    answer: "MEC",                  func: true,
-    hint: "Decode the emoji clue." },
-  { n: 7,  title: "Vault & Arsenal",            type: "Anagram",              cat: "word",   icon: "🔄", location: "Mewata Armoury",                     answer: "Mewata Armoury",       func: true,
-    hint: "Rearrange the letters to reveal a heritage military building." },
-  { n: 8,  title: "Twin Tiles",                 type: "Memory Match",         cat: "action", icon: "🃏", location: "Connaught Park",                     answer: "Connaught",            func: false,
-    hint: "Flip pairs to reveal the answer." },
-  { n: 9,  title: "Hidden in Plain Sight",      type: "Visual Riddle",        cat: "visual", icon: "🔍", location: "Wonderland (giant head, The Bow)",  answer: "Wonderland",           func: false,
-    hint: "Find a hidden word in the image." },
-  { n: 10, title: "Who Did What?",              type: "Logic Puzzle",         cat: "logic",  icon: "🕵️", location: "Olympic Plaza",                     answer: "Olympic Plaza",        func: false,
-    hint: "Deduce the answer from the clues." },
-  { n: 11, title: "Roast & Bean",               type: "Anagram",              cat: "word",   icon: "🔄", location: "Phil & Sebastian (Beltline)",       answer: "Phil and Sebastian",   func: false,
-    hint: "Unscramble to find a popular roastery." },
-  { n: 12, title: "Calculate to Conquer",       type: "Math Puzzle",          cat: "logic",  icon: "🧮", location: "919 11 Ave SW (the office!)",       answer: "919",                  func: false,
-    hint: "Solve to reveal a familiar address number." },
-  { n: 13, title: "What Comes Next?",           type: "Pattern Sequence",     cat: "logic",  icon: "🌀", location: "National on 17th",                  answer: "National",             func: false,
-    hint: "Continue the pattern." },
-  { n: 14, title: "Gallows Words",              type: "Hangman",              cat: "word",   icon: "🎯", location: "Last Best Brewing",                 answer: "Last Best",            func: false,
-    hint: "Guess letter by letter." },
-  { n: 15, title: "Picture This",               type: "Rebus Puzzle",         cat: "visual", icon: "🎨", location: "Cassis Bistro",                     answer: "Cassis",               func: false,
-    hint: "A picture-word puzzle." },
-  { n: 16, title: "Dots and Dashes",            type: "Morse Code",           cat: "code",   icon: "📡", location: "Studio Bell (National Music Centre)", answer: "Studio Bell",        func: false,
-    hint: "Decode the Morse." },
-  { n: 17, title: "Slide to Solve",             type: "Sliding Puzzle",       cat: "action", icon: "🔢", location: "Stephen Avenue",                    answer: "Stephen Avenue",       func: false,
-    hint: "Slide the tiles into order." },
-  { n: 18, title: "Tiny Crossword",             type: "Mini Crossword",       cat: "word",   icon: "📋", location: "Native Tongues",                    answer: "Native Tongues",       func: false,
-    hint: "A mini crossword." },
-  { n: 19, title: "Spot the Change",            type: "Spot the Difference",  cat: "visual", icon: "👀", location: "Anejo Restaurant",                  answer: "Anejo",                func: false,
-    hint: "Find the 5 differences." },
-  { n: 20, title: "Through the Maze",           type: "Maze",                 cat: "action", icon: "🌀", location: "Beaulieu Gardens (Lougheed House)", answer: "Beaulieu",             func: false,
-    hint: "Navigate to the centre." },
-  { n: 21, title: "Buzzer Beater",              type: "Speed Trivia",         cat: "action", icon: "⚡", location: "Wurst (German beer hall)",          answer: "Wurst",                func: false,
-    hint: "Beat the clock." },
-  { n: 22, title: "Twist Your Tongue",          type: "Tongue Twister",       cat: "action", icon: "👅", location: "Bankers Hall",                       answer: "Bankers Hall",         func: false,
-    hint: "Say it three times fast." },
-  { n: 23, title: "Quote Mosaic",               type: "Quote Unscramble",     cat: "word",   icon: "💬", location: "Calgary Tower",                      answer: "Calgary Tower",        func: false,
-    hint: "Put the words in order." },
-  { n: 24, title: "Color Echo",                 type: "Simon Says",           cat: "action", icon: "🎨", location: "Devonian Gardens (inside Core)",    answer: "Devonian",             func: false,
-    hint: "Repeat the color sequence." },
-  { n: 25, title: "Mind the Sequence",          type: "Number Sequence",      cat: "logic",  icon: "🔢", location: "Monogram Coffee",                    answer: "Monogram",             func: false,
-    hint: "Find the missing number." },
-  { n: 26, title: "Linked Minds",               type: "Word Association",     cat: "word",   icon: "🔗", location: "Cibo",                                answer: "Cibo",                  func: false,
-    hint: "One word ties them together." },
-  { n: 27, title: "Mirror, Mirror",             type: "Reverse Text",         cat: "code",   icon: "🪞", location: "Holy Trinity Lutheran Church",       answer: "Holy Trinity",         func: false,
-    hint: "Read it backwards." },
-  { n: 28, title: "Knock Knock",                type: "Wordplay Riddle",      cat: "word",   icon: "🚪", location: "Major Tom (rooftop bar)",            answer: "Major Tom",             func: false,
-    hint: "A pun-filled riddle." },
-  { n: 29, title: "Vertical Secrets",           type: "Acrostic",             cat: "code",   icon: "📜", location: "Diner Deluxe",                       answer: "Diner Deluxe",         func: false,
-    hint: "First letters spell the answer." },
-  { n: 30, title: "The Final Treasure",         type: "Master Puzzle",        cat: "logic",  icon: "💎", location: "Back at the Remedy office (919 11 Ave SW)", answer: "Remedy",        func: false,
-    hint: "Combine your finds to unlock the grand prize." },
+  { n: 1,  title: "The Skyline Sentinel",       type: "Wordle",            cat: "word",   icon: "🗼", location: "Calgary Tower",                          answer: "TOWER",                func: true },
+  { n: 2,  title: "Pedestrian Promenade",       type: "Word Scramble",     cat: "word",   icon: "🚶", location: "Stephen Avenue Walk",                    answer: "STEPHEN AVE",          func: true },
+  { n: 3,  title: "Indoor Jungle",              type: "Anagram",           cat: "word",   icon: "🌿", location: "Devonian Gardens",                       answer: "DEVONIAN",             func: true },
+  { n: 4,  title: "Curious Giant",              type: "Emoji Puzzle",      cat: "visual", icon: "🗿", location: "The Bow (Wonderland Sculpture)",         answer: "Wonderland",           func: true },
+  { n: 5,  title: "Five-Ring Ground",           type: "Trivia",            cat: "logic",  icon: "🥇", location: "Olympic Plaza",                          answer: "1988",                 func: true },
+  { n: 6,  title: "Cloud Cutter",               type: "Word Scramble",     cat: "word",   icon: "☁️", location: "Telus Sky",                              answer: "TELUS SKY",            func: true },
+  { n: 7,  title: "The Whispering Span",        type: "Text Riddle",       cat: "word",   icon: "🌉", location: "Peace Bridge",                           answer: "Peace Bridge",         func: true },
+  { n: 8,  title: "Caesar's Island",            type: "Caesar Cipher",     cat: "code",   icon: "🏝️", location: "Princess Island Park",                   answer: "PRINCESS ISLAND",      func: true },
+  { n: 9,  title: "Two Words in French",        type: "Translation",       cat: "code",   icon: "💧", location: "Eau Claire",                             answer: "Eau Claire",           func: true },
+  { n: 10, title: "Find the Threads",           type: "Connections",       cat: "logic",  icon: "🧩", location: "China Town",                             answer: "China Town",           func: true },
+  { n: 11, title: "Gallows Walls",              type: "Hangman",           cat: "action", icon: "🏰", location: "Fort Calgary",                           answer: "FORT CALGARY",         func: true },
+  { n: 12, title: "Stacked Stories",            type: "Acrostic",          cat: "code",   icon: "📚", location: "Calgary Public Library",                 answer: "LIBRARY",              func: true },
+  { n: 13, title: "Home of the Flames",         type: "Text Riddle",       cat: "word",   icon: "🏒", location: "Saddledome",                             answer: "Saddledome",           func: true },
+  { n: 14, title: "Where We Came From",         type: "Math Puzzle",       cat: "logic",  icon: "📍", location: "Old Remedy Office",                      answer: "OLD OFFICE",           func: true },
+  { n: 15, title: "Smile! Snap! Send!",         type: "Photo Challenge",   cat: "visual", icon: "📸", location: "Photo with BEN",                         answer: "BEN",                  func: true },
+  { n: 16, title: "Where Was the Party?",       type: "Trivia",            cat: "logic",  icon: "🎉", location: "This year's Christmas party venue",      answer: "PARTY",                func: true },
+  { n: 17, title: "Up the Wall",                type: "Rebus",             cat: "visual", icon: "🧗", location: "MEC Climbing Wall",                      answer: "MEC",                  func: true },
 ];
 
 const CAT_COLORS = {
@@ -125,7 +62,6 @@ const CAT_COLORS = {
 
 // ============================================================
 // State — synced across team devices via Netlify Function
-// (falls back to localStorage if the API is unreachable)
 // ============================================================
 const TEAM_KEY = "remedy-hunt-team";
 const progressKey = (t) => `remedy-hunt-progress-${t || 'none'}`;
@@ -140,9 +76,6 @@ function getTeamInfo() {
   return id && TEAMS[id] ? { id, ...TEAMS[id] } : null;
 }
 
-// In-memory cache of the most recent server state (for the current page)
-let _cached = null;
-
 function _localLoad() {
   try { return new Set(JSON.parse(localStorage.getItem(progressKey(getTeam()))) || []); }
   catch (e) { return new Set(); }
@@ -150,31 +83,21 @@ function _localLoad() {
 function _localSave(set) {
   localStorage.setItem(progressKey(getTeam()), JSON.stringify([...set]));
 }
-
-// Synchronous local-only load (used by initial render before sync completes)
 function loadProgress() { return _localLoad(); }
 
-// Save progress: write locally, push to server if available.
 async function saveProgress(set) {
   _localSave(set);
   const team = getTeam();
   if (!team) return;
   try {
-    const res = await fetch(`${API_URL}?team=${encodeURIComponent(team)}`, {
+    await fetch(`${API_URL}?team=${encodeURIComponent(team)}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ solved: [...set] }),
     });
-    if (res.ok) {
-      const data = await res.json();
-      _cached = data;
-    }
-  } catch (e) {
-    // offline / no functions — fine, we'll catch up later
-  }
+  } catch (e) { /* offline */ }
 }
 
-// Fetch server state, merge with local cache. Returns Set.
 async function fetchProgress() {
   const team = getTeam();
   if (!team) return new Set();
@@ -182,13 +105,10 @@ async function fetchProgress() {
     const res = await fetch(`${API_URL}?team=${encodeURIComponent(team)}`, { cache: "no-store" });
     if (!res.ok) throw new Error(res.status);
     const data = await res.json();
-    _cached = data;
     const set = new Set(data.solved || []);
     _localSave(set);
     return set;
-  } catch (e) {
-    return _localLoad();
-  }
+  } catch (e) { return _localLoad(); }
 }
 
 function authenticate(teamId, password) {
@@ -198,48 +118,45 @@ function authenticate(teamId, password) {
 }
 
 // ============================================================
-// Topbar
+// Topbar — logo, team tag, help button
 // ============================================================
 function renderTopbar() {
   const bar = document.getElementById("topbar");
   if (!bar) return;
   const team = getTeamInfo();
-  const right = team
-    ? `<div style="display: flex; align-items: center; gap: 6px;">
-         <span class="team-tag" style="--team-color: ${team.color};">
-           <span class="swatch">${team.emoji}</span>
-           <span>${team.name}</span>
-         </span>
-         <button class="switch-btn" id="switchTeam" type="button">Switch</button>
-       </div>`
-    : '';
   bar.innerHTML = `
     <a href="index.html" aria-label="Home">
       <img src="assets/remedy-logo.png" alt="Remedy Engineering" class="brand-logo" />
     </a>
-    ${right}
+    <div class="topbar-right">
+      ${team ? `
+        <button class="team-tag" id="teamTag" type="button" style="--team-color: ${team.color};">
+          <span class="swatch">${team.emoji}</span>
+          <span>${team.name}</span>
+        </button>
+      ` : ''}
+      <button class="help-btn" id="helpBtn" type="button" aria-label="Rules and tips">?</button>
+    </div>
   `;
-  const sw = document.getElementById("switchTeam");
-  if (sw) sw.addEventListener("click", () => {
-    if (confirm("Switch teams? Your current team's progress stays saved on this device.")) {
-      clearTeam();
-      window.location.href = "index.html";
-    }
-  });
+  const helpBtn = document.getElementById("helpBtn");
+  if (helpBtn) helpBtn.addEventListener("click", () => openHelpModal());
+  const teamTag = document.getElementById("teamTag");
+  if (teamTag) teamTag.addEventListener("click", () => openTeamModal());
 }
 
 // ============================================================
-// Team picker (landing page when no team set)
+// Team picker (landing)
 // ============================================================
 function renderTeamPicker(containerId) {
   const el = document.getElementById(containerId);
   if (!el) return;
   el.innerHTML = "";
-  Object.entries(TEAMS).forEach(([id, t]) => {
+  Object.entries(TEAMS).forEach(([id, t], idx) => {
     const card = document.createElement("button");
     card.className = "team-card";
     card.type = "button";
     card.style.setProperty("--team-color", t.color);
+    card.style.animationDelay = `${idx * 50}ms`;
     card.dataset.team = id;
     card.innerHTML = `
       <span class="icon">${t.emoji}</span>
@@ -267,16 +184,12 @@ function openPasswordModal(teamId) {
   input.value = "";
   modal.classList.add("show");
   modal.dataset.team = teamId;
-  if (!t.password) {
-    document.getElementById("modalHint").textContent = "No password set — tap Enter to start.";
-  } else {
-    document.getElementById("modalHint").textContent = "Ask your host for the password.";
-  }
+  document.getElementById("modalHint").textContent = !t.password
+    ? "No password set — tap Enter to start."
+    : "Ask your host for the password.";
   setTimeout(() => input.focus(), 100);
 }
-function closePasswordModal() {
-  document.getElementById("authModal").classList.remove("show");
-}
+function closePasswordModal() { document.getElementById("authModal").classList.remove("show"); }
 function submitPassword() {
   const modal = document.getElementById("authModal");
   const teamId = modal.dataset.team;
@@ -292,7 +205,49 @@ function submitPassword() {
 }
 
 // ============================================================
-// Clue grid (sorted: unsolved first, solved at bottom)
+// Help modal (rules & tips)
+// ============================================================
+function openHelpModal() {
+  const modal = document.getElementById("helpModal");
+  if (modal) modal.classList.add("show");
+}
+function closeHelpModal() {
+  const modal = document.getElementById("helpModal");
+  if (modal) modal.classList.remove("show");
+}
+
+// ============================================================
+// Team modal (see which team you're on + switch)
+// ============================================================
+function openTeamModal() {
+  const modal = document.getElementById("teamModal");
+  if (!modal) return;
+  const list = document.getElementById("teamModalList");
+  const currentId = getTeam();
+  list.innerHTML = "";
+  Object.entries(TEAMS).forEach(([id, t]) => {
+    const row = document.createElement("div");
+    row.className = "team-row" + (id === currentId ? " current" : "");
+    row.style.setProperty("--team-color", t.color);
+    row.innerHTML = `
+      <span class="row-icon">${t.emoji}</span>
+      <span class="row-body">
+        <p class="row-name">${t.name}</p>
+        <p class="row-sub">${t.tagline}</p>
+      </span>
+      ${id === currentId ? '<span class="row-current">You</span>' : ''}
+    `;
+    list.appendChild(row);
+  });
+  modal.classList.add("show");
+}
+function closeTeamModal() {
+  const modal = document.getElementById("teamModal");
+  if (modal) modal.classList.remove("show");
+}
+
+// ============================================================
+// Clue grid (unsolved first, solved at bottom, animated)
 // ============================================================
 function renderClueGrid() {
   const unsolvedGrid = document.getElementById("clueGridUnsolved");
@@ -307,23 +262,26 @@ function renderClueGrid() {
   const unsolved = CLUES.filter(c => !solved.has(c.n));
   const done = CLUES.filter(c => solved.has(c.n));
 
-  unsolved.forEach(c => unsolvedGrid.appendChild(makeClueCard(c, false)));
-  done.forEach(c => solvedGrid.appendChild(makeClueCard(c, true)));
+  unsolved.forEach((c, i) => unsolvedGrid.appendChild(makeClueCard(c, false, i)));
+  done.forEach((c, i) => solvedGrid.appendChild(makeClueCard(c, true, i)));
 
-  document.getElementById("unsolvedCount").textContent = `${unsolved.length} remaining`;
-  if (done.length > 0) {
-    dividerEl.style.display = "flex";
-    dividerEl.querySelector(".divider-text").textContent = `${done.length} solved`;
-  } else {
-    dividerEl.style.display = "none";
+  const remainEl = document.getElementById("unsolvedCount");
+  if (remainEl) remainEl.textContent = `${unsolved.length} of ${CLUES.length} remaining`;
+  if (dividerEl) {
+    if (done.length > 0) {
+      dividerEl.style.display = "flex";
+      const dt = dividerEl.querySelector(".divider-text");
+      if (dt) dt.textContent = `${done.length} solved`;
+    } else dividerEl.style.display = "none";
   }
   updateProgressBar(solved);
 }
-function makeClueCard(clue, isSolved) {
+function makeClueCard(clue, isSolved, idx) {
   const card = document.createElement("a");
   card.href = `clue-${String(clue.n).padStart(2, "0")}.html`;
   card.className = "clue-card" + (isSolved ? " solved" : "");
   card.style.setProperty("--card-color", CAT_COLORS[clue.cat]);
+  card.style.animationDelay = `${idx * 30}ms`;
   card.innerHTML = `
     <div class="solved-badge" aria-hidden="true">✓</div>
     <div class="card-top">
@@ -331,7 +289,6 @@ function makeClueCard(clue, isSolved) {
       <div class="card-icon">${clue.icon}</div>
     </div>
     <div class="card-bottom">
-      <div class="card-type">${clue.type}</div>
       <h3 class="card-title">${clue.title}</h3>
     </div>
   `;
@@ -347,47 +304,59 @@ function updateProgressBar(solved) {
 }
 
 // ============================================================
+// Confetti burst (for solve celebration)
+// ============================================================
+function confettiBurst() {
+  const colors = ['#F26921', '#A4B54B', '#3aa1d5', '#8a6dd5', '#c0392b'];
+  const c = document.createElement('div');
+  c.className = 'confetti-layer';
+  for (let i = 0; i < 36; i++) {
+    const p = document.createElement('span');
+    p.style.background = colors[i % colors.length];
+    p.style.left = (50 + (Math.random() - 0.5) * 30) + '%';
+    p.style.animationDelay = (Math.random() * 0.15) + 's';
+    p.style.transform = `rotate(${Math.random() * 360}deg)`;
+    p.style.setProperty('--dx', ((Math.random() - 0.5) * 240) + 'px');
+    p.style.setProperty('--dy', (-200 - Math.random() * 200) + 'px');
+    c.appendChild(p);
+  }
+  document.body.appendChild(c);
+  setTimeout(() => c.remove(), 1800);
+}
+
+// ============================================================
 // DOM init
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
   renderTopbar();
 
-  // Index page logic: show team picker OR clue list
   const authView = document.getElementById("authView");
   const huntView = document.getElementById("huntView");
+
   if (authView && huntView) {
     const team = getTeamInfo();
     if (team) {
       authView.style.display = "none";
       huntView.style.display = "block";
-      // populate team header on hunt view
       const teamHeader = document.getElementById("teamWelcome");
       if (teamHeader) {
         teamHeader.style.setProperty("--team-color", team.color);
         teamHeader.innerHTML = `
           <span class="eyebrow" style="color: ${team.color}; border-color: ${team.color}66; background: ${team.color}1a;">
             <span class="dot" style="background: ${team.color};"></span>
-            ${team.emoji} ${team.name}
+            <span class="team-emoji-anim">${team.emoji}</span> ${team.name}
           </span>
           <h1 class="title">Welcome,<br/><span class="accent" style="color: ${team.color};">${team.name}</span></h1>
-          <p class="tagline">${team.tagline} <strong>Find each Calgary spot, snap a team photo, mark it done.</strong></p>
+          <p class="tagline">${team.tagline}</p>
         `;
       }
       renderClueGrid();
-      // Sync from server and poll for updates
-      (async () => {
-        await fetchProgress();
-        renderClueGrid();
-      })();
-      setInterval(async () => {
-        await fetchProgress();
-        renderClueGrid();
-      }, POLL_MS);
+      (async () => { await fetchProgress(); renderClueGrid(); })();
+      setInterval(async () => { await fetchProgress(); renderClueGrid(); }, POLL_MS);
     } else {
       authView.style.display = "block";
       huntView.style.display = "none";
       renderTeamPicker("teamPicker");
-      // Wire up modal buttons
       document.getElementById("modalCancel").addEventListener("click", closePasswordModal);
       document.getElementById("modalSubmit").addEventListener("click", submitPassword);
       document.getElementById("passwordInput").addEventListener("keydown", e => {
@@ -398,13 +367,34 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   }
+
+  // Help modal wiring (any page)
+  const helpClose = document.getElementById("helpClose");
+  if (helpClose) helpClose.addEventListener("click", closeHelpModal);
+  const helpModal = document.getElementById("helpModal");
+  if (helpModal) helpModal.addEventListener("click", e => {
+    if (e.target.id === "helpModal") closeHelpModal();
+  });
+
+  // Team modal wiring (any page)
+  const teamClose = document.getElementById("teamClose");
+  if (teamClose) teamClose.addEventListener("click", closeTeamModal);
+  const teamSwitch = document.getElementById("teamSwitch");
+  if (teamSwitch) teamSwitch.addEventListener("click", () => {
+    if (confirm("Switch teams? Your team's progress stays saved.")) {
+      clearTeam();
+      window.location.href = "index.html";
+    }
+  });
+  const teamModal = document.getElementById("teamModal");
+  if (teamModal) teamModal.addEventListener("click", e => {
+    if (e.target.id === "teamModal") closeTeamModal();
+  });
 });
 
-// Expose for clue pages
 window.REMEDY = {
   TEAMS, CLUES, CAT_COLORS,
   getTeam, setTeam, clearTeam, getTeamInfo,
   loadProgress, saveProgress, fetchProgress,
-  progressKey,
-  renderTopbar,
+  confettiBurst,
 };
