@@ -2,20 +2,20 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#414042" />
-  <title>Clue 27 — Mirror, Mirror</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1c1b1f" />
+  <title>27 · Mirror, Mirror</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav class="topbar" id="topbar"></nav>
 
   <main class="clue-page">
-    <a href="#" id="backLink" class="back-link">← Back to your team</a>
+    <a href="index.html" class="back-link">← Back to clues</a>
 
     <div class="clue-header">
       <div class="clue-number-large">Clue 27 of 30</div>
@@ -27,21 +27,13 @@
     <div class="puzzle-box center">
       <div class="placeholder-icon">🪞</div>
       <h2>Reverse Text</h2>
-      <p>Read it backwards to reveal the answer.</p>
-      <p style="margin-top: 18px; font-size: 0.85rem; color: var(--orange);">
-        <em>Demo placeholder — this puzzle type will be built before the event.</em>
+      <p>Read it backwards.</p>
+      <p style="margin-top: 14px; font-size: 0.82rem; color: var(--orange);">
+        <em>Demo placeholder — puzzle to be built before the event.</em>
       </p>
       <div class="feedback" id="feedback"></div>
     </div>
 
-
-    <div class="photo-box" id="photoBox" style="display: none;">
-      <h3>📸 Photo proof required</h3>
-      <p>Take a team photo at <strong id="locationName"></strong> to claim the clue.</p>
-      <label class="upload-btn" for="photoInput">Upload team photo</label>
-      <input type="file" id="photoInput" accept="image/*" capture="environment" />
-      <img class="photo-preview" id="photoPreview" alt="Your team photo" />
-    </div>
 
     <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
   </main>
@@ -49,54 +41,16 @@
   <script src="script.js"></script>
   <script>
     const CLUE_NUM = 27;
-    const ANSWER = "Louise Bridge";
-    const LOCATION = "Louise Bridge";
+    const ANSWER = "Holy Trinity";
+    const LOCATION = "Holy Trinity Lutheran Church";
 
-    // back link points at the team's page
-    const teamInfo = window.REMEDY.getTeamInfo();
-    const backLink = document.getElementById("backLink");
-    if (teamInfo) { backLink.href = teamInfo.url; backLink.textContent = `← Back to ${teamInfo.name}`; }
-    else { backLink.href = "index.html"; backLink.textContent = "← Choose your team"; }
-
-    const photoBox = document.getElementById("photoBox");
-    const photoInput = document.getElementById("photoInput");
-    const photoPreview = document.getElementById("photoPreview");
-    const locationName = document.getElementById("locationName");
-
-    function revealLocation() {
-      locationName.textContent = LOCATION;
-      photoBox.style.display = "block";
+    // If no team is set, route home
+    if (!window.REMEDY.getTeam()) {
+      window.location.href = "index.html";
     }
 
-    function loadPhoto() {
-      const team = window.REMEDY.getTeam();
-      const data = localStorage.getItem(window.REMEDY.photoKey(team, CLUE_NUM));
-      if (data) {
-        photoPreview.src = data;
-        photoPreview.classList.add("show");
-      }
-    }
-
-    photoInput.addEventListener("change", e => {
-      const f = e.target.files[0];
-      if (!f) return;
-      const reader = new FileReader();
-      reader.onload = ev => {
-        photoPreview.src = ev.target.result;
-        photoPreview.classList.add("show");
-        try {
-          const team = window.REMEDY.getTeam();
-          localStorage.setItem(window.REMEDY.photoKey(team, CLUE_NUM), ev.target.result);
-        } catch (err) {
-          console.warn("Photo too large to save locally:", err);
-        }
-      };
-      reader.readAsDataURL(f);
-    });
-
-    // Solve button
     const solveBtn = document.getElementById("solveBtn");
-    function refreshSolve() {
+    async function refreshSolve() {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) {
         solveBtn.textContent = "Solved ✓ (tap to undo)";
@@ -106,29 +60,30 @@
         solveBtn.classList.remove("solved");
       }
     }
-    solveBtn.addEventListener("click", () => {
+    solveBtn.addEventListener("click", async () => {
       const solved = window.REMEDY.loadProgress();
       if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
       else solved.add(CLUE_NUM);
-      window.REMEDY.saveProgress(solved);
+      solveBtn.textContent = "Saving…";
+      await window.REMEDY.saveProgress(solved);
       refreshSolve();
     });
 
-    // Photo persistence
-    loadPhoto();
+    // Sync state from server on load (so multiple devices stay in sync)
+    (async () => {
+      await window.REMEDY.fetchProgress();
+      refreshSolve();
+    })();
     refreshSolve();
 
-    // Puzzle-specific logic
+    // Puzzle-specific code
     
     const feedback = document.getElementById("feedback");
     if (feedback) {
       feedback.className = "feedback show";
-      feedback.style.background = "#fff3e0";
-      feedback.style.color = "#8a4a14";
-      feedback.style.border = "1px solid #ffd6a3";
-      feedback.textContent = `Demo: the puzzle for "${"Louise Bridge"}" is being built. Tap "I solved it" to mark this clue done.`;
+      feedback.style.background = "#fff3e0"; feedback.style.color = "#8a4a14"; feedback.style.border = "1px solid #ffd6a3";
+      feedback.textContent = `Demo placeholder for ${"Holy Trinity Lutheran Church"}. Tap "I solved it" to mark this clue done.`;
     }
-    revealLocation();
 
   </script>
 </body>

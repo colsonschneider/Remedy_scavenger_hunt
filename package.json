@@ -1,0 +1,10 @@
+{
+  "name": "remedy-scavenger-hunt",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Remedy Engineering Calgary scavenger hunt — static site + 1 Netlify Function for team progress sync.",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}

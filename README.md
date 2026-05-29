@@ -1,83 +1,109 @@
 # Remedy Engineering — Calgary Scavenger Hunt
 
-A branded, team-based scavenger hunt for the Calgary office. Players scan a QR code for their team, pick clues in any order, solve a puzzle, walk to the Calgary location it reveals, and upload a team photo.
+A mobile-first scavenger hunt for the Remedy office at 919 11 Ave SW (Beltline). One URL, six password-gated teams, 30 clues, real-time progress sync across team devices.
 
 ## File layout
 
 ```
 scavenger-hunt/
-├── index.html              # Landing page — team picker
-├── team-compass.html       # Team page (orange)
-├── team-blueprint.html     # Team page (blue)
-├── team-foundation.html    # Team page (olive)
-├── team-toolkit.html       # Team page (red)
-├── clue-01.html … clue-30.html  # 30 clues
-├── styles.css              # Remedy-branded styling
-├── script.js               # Teams + clues data, shared logic
-└── assets/
-    ├── remedy-logo.png     # Full color
-    └── remedy-r.png        # R only (used as favicon)
+├── index.html                       # Landing — team picker (or clue list once signed in)
+├── clue-01.html … clue-30.html      # 30 clues
+├── styles.css                       # Mobile-first Remedy-branded design
+├── script.js                        # All teams, clues, auth, sync logic
+├── package.json                     # Dependency for the Netlify Function
+├── netlify.toml                     # Tells Netlify where the functions live
+├── netlify/
+│   └── functions/
+│       └── progress.mjs             # Cross-device progress sync
+├── assets/
+│   ├── remedy-logo.png
+│   └── remedy-r.png
+└── README.md
 ```
 
 ## How teams work
 
-There is one URL per team — each team should be given a QR code pointing at their own team page:
+There's **one shared URL** for everyone. When a teammate opens it, they:
+1. Pick their team (one of six)
+2. Enter the team's password
+3. Land on their team's clue board
 
-| Team | URL | Color |
-|------|-----|-------|
-| Compass | `/team-compass.html` | Orange |
-| Blueprint | `/team-blueprint.html` | Blue |
-| Foundation | `/team-foundation.html` | Olive Green |
-| Toolkit | `/team-toolkit.html` | Red |
+All devices on the same team see the **same progress in real time** — when one teammate marks a clue solved, every other teammate's clue board updates within ~8 seconds.
 
-When someone visits a team URL, that page **saves their team identity in their browser**. From then on, every clue page shows their team in the top bar. Progress and photo uploads are stored per-team — so if multiple devices on the same team visit the same URL, each device tracks its own copy.
+Team identity persists on the device, so a teammate doesn't re-enter the password unless they tap the **Switch** button in the corner.
 
-The main `index.html` page has a team picker too, in case someone lands there directly.
+## Teams
 
-**Want different team names?** Edit the `TEAMS` block at the top of `script.js`. Then for each new team, create a copy of any `team-*.html` file (just change the team id in the inline script).
+| Team | Emoji | Color | Theme |
+|------|-------|-------|-------|
+| Boilers | 🔥 | Orange | Hot under pressure |
+| Chillers | ❄️ | Blue | Cool under pressure |
+| Compressors | 💨 | Purple | Power through pressure |
+| Pumps | 💧 | Teal | Keep the flow moving |
+| Ductworks | 🌬️ | Olive | Smooth airflow |
+| Manifolds | ⚙️ | Red | Many paths, one answer |
+
+## Setting team passwords
+
+Open `script.js` and look for the `TEAMS` block near the top:
+
+```js
+const TEAMS = {
+  boilers: { name: "Boilers", ..., password: "" },     // ← set passwords here
+  chillers: { name: "Chillers", ..., password: "" },
+  ...
+};
+```
+
+- Empty string `""` = no password needed (handy for testing)
+- Any other string = teammates must enter that exact string
+
+These are stored client-side, so they're not secret-grade — fine for a casual office event, not for protecting real data.
 
 ## Functioning demo puzzles
 
-These 8 are fully playable in the demo:
+These 8 clues are fully playable in the demo:
 
 | # | Clue | Type | Answer / Location |
 |---|------|------|--------------------|
-| 1 | The Whispering Span | Text Riddle | **Peace Bridge** |
-| 2 | Five-Letter Skyline | Wordle | **TOWER** → Calgary Tower (view of) |
-| 3 | Find the Threads | Connections (4×4 groups) | reveals **Riley Park** |
-| 4 | Letters in Chaos | Word Scramble | **KENSINGTON** |
-| 5 | Caesar's Secret | Caesar Cipher (rotate-to-decode) | **SUNNYSIDE STATION** |
-| 6 | Speak in Symbols | Emoji Puzzle | **Prince's Island** |
-| 7 | The Riverside Mystery | Anagram | **McHugh House** |
+| 1 | The Twin-Block Park | Text Riddle | **Tomkins Park** |
+| 2 | Five-Letter Foothold | Wordle | **PARKS** → Central Memorial Park |
+| 3 | Find the Threads | Connections | reveals **Lougheed House** |
+| 4 | Letters in Chaos | Word Scramble | **BELTLINE** |
+| 5 | Caesar's Secret | Caesar Cipher | **SHELDON CHUMIR** |
+| 6 | Speak in Symbols | Emoji Puzzle | **MEC** |
+| 7 | Vault & Arsenal | Anagram | **Mewata Armoury** |
 
-The remaining 22 clues are styled placeholders pointing to real Kensington-area locations (Pages Books, Higher Ground, Hayden Block, Vendome, Pulcinella, Memorial Drive, Crescent Heights, Devonian Gardens, etc.). They show the puzzle type and a "I solved it" button so the hunt remains usable end-to-end.
-
-## Photo uploads
-
-Each clue page has a photo upload area that becomes visible once the puzzle is solved (or, for stubs, immediately). Photos are saved in browser localStorage on the device that uploaded them. **The host should view photos at the finish line on the team's main device.**
-
-Storage limit: ~5 MB per domain in most browsers, so very large photos may not save. The site already compresses preview rendering but doesn't resize the underlying file. If photos are missing, the team probably tried to upload too many full-size images on one device.
+The other 22 clues are styled placeholders pointing at real Beltline-area spots (Studio Bell, Stephen Avenue, Calgary Tower, Phil & Sebastian, National on 17th, Last Best Brewing, Native Tongues, Major Tom, Diner Deluxe, etc.) so the hunt remains usable end-to-end. The host can build out the actual puzzle logic for any of these later.
 
 ## Deploy to Netlify
 
-1. Open [app.netlify.com/drop](https://app.netlify.com/drop)
-2. Drag the whole `scavenger-hunt` folder onto the page (or use the bundled zip)
-3. Once deployed, rename the site to something memorable
-4. Make 4 QR codes — one per team URL — and print one per team
+This site needs Netlify (or equivalent) because of the Function for progress sync. Drag-and-drop a zip will not enable Functions — you need a git-connected deploy OR the Netlify CLI.
 
-## Generating QR codes
+**Easiest path: connect a GitHub repo.**
 
-Any free QR generator works (qr-code-generator.com, qrcode-monkey.com). Make 4:
-- `https://your-site.netlify.app/team-compass.html`
-- `https://your-site.netlify.app/team-blueprint.html`
-- `https://your-site.netlify.app/team-foundation.html`
-- `https://your-site.netlify.app/team-toolkit.html`
+1. Push this folder to a GitHub repo
+2. In Netlify → Add new site → Import from Git → select the repo
+3. Build settings are read from `netlify.toml` (`publish = "."`, `functions = "netlify/functions"`)
+4. Netlify installs the dependency in `package.json` (`@netlify/blobs`) automatically
+5. Deploy. Test by visiting `https://your-site.netlify.app/.netlify/functions/progress?team=boilers` — you should see `{"solved":[],"v":0}` (or similar). If you see that, sync is working.
 
-You can also make a 5th QR code for `/index.html` and post it at the start so anyone who's confused can pick their team manually.
+**If sync isn't working** (clues solve locally but other devices don't see them):
+
+- Check Netlify → Functions tab — `progress` should appear there with a green status
+- If it's missing or red, check the deploy log for errors during `npm install`
+- If you want to skip sync entirely (single-device mode), delete the `netlify/`, `package.json`, and `netlify.toml` files. The site still works; team progress just won't sync across devices.
 
 ## Customising
 
-- **Change team names or colors** → edit `TEAMS` in `script.js` and rename the `team-*.html` files to match.
-- **Change clue titles, answers, or locations** → edit the `CLUES` array at the top of `script.js` AND the corresponding `clue-XX.html` page (for the answer & location).
-- **Build a real puzzle for one of the stub clues** → replace the inline puzzle body inside that `clue-XX.html`. The shared scaffolding (photo upload, solve button, team header) keeps working automatically.
-- **Brand colors** → CSS variables at the top of `styles.css` (charcoal, orange, olive).
+- **Change team names / colors / passwords** → edit `TEAMS` in `script.js`
+- **Change clue titles, answers, locations** → edit the `CLUES` array in `script.js` AND the corresponding `clue-XX.html` for the answer & location
+- **Build a real puzzle for one of the stub clues** → replace the `<div class="puzzle-box">…</div>` block in that `clue-XX.html`. The shared back link, solve button, and sync hooks keep working automatically
+- **Brand colors** → CSS variables at the top of `styles.css`
+- **Add / remove teams** → just edit the `TEAMS` object; the team picker generates from it
+
+## Notes
+
+- Progress is stored under `Netlify Blobs` keyed by team id. There's no auth on the API — anyone who knows a team id can read or post that team's state. This is fine for a one-day office event.
+- Photo uploads were removed in this version (they'd require photo storage + sharing infrastructure beyond Blobs).
+- The Netlify free tier covers ~125K function invocations per month, more than enough for a 6-team office hunt that polls every 8 seconds.

@@ -2,57 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#414042" />
-  <title>Remedy Scavenger Hunt — Find Your Team</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1c1b1f" />
+  <title>The Remedy Hunt</title>
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="assets/remedy-r.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <nav class="topbar" id="topbar"></nav>
 
-  <header class="hero">
-    <div class="hero-inner">
-      <span class="eyebrow">Calgary Office &middot; Kensington Hunt</span>
-      <h1 class="title">The <span class="accent">Great</span> Remedy Hunt</h1>
-      <p class="tagline">
-        Thirty clues hidden across Kensington and the Bow River pathways.
-        Solve each puzzle to discover a location — then take a team photo there.
-        First team back to the office with all 30 wins.
-      </p>
-    </div>
-  </header>
+  <!-- ========== AUTH VIEW (no team selected) ========== -->
+  <div id="authView">
+    <header class="hero">
+      <div class="hero-inner">
+        <span class="eyebrow"><span class="dot"></span>Beltline · Calgary</span>
+        <h1 class="title">The <span class="accent">Remedy</span> Hunt</h1>
+        <p class="tagline">
+          Thirty mechanical mysteries hidden across the Beltline.
+          Solve each puzzle, find the Calgary spot it points to,
+          and beat the other teams back to <strong>919 11 Ave SW</strong>.
+        </p>
+      </div>
+    </header>
 
-  <main class="container">
-    <div class="section-head">
-      <div>
-        <h2>Choose your team</h2>
-        <p class="section-sub">Each team has its own QR code. Tap your team to get started.</p>
+    <main class="container">
+      <div class="section-head">
+        <h2>Pick your team</h2>
+        <span class="count">6 teams</span>
+      </div>
+      <section class="team-list" id="teamPicker" aria-label="Teams"></section>
+
+      <section class="info-card">
+        <h3>How it works</h3>
+        <ol>
+          <li>Tap your team and enter the password your host gave you.</li>
+          <li>You'll land on your team's clue board.</li>
+          <li>Open any clue, solve the puzzle to reveal a Calgary spot.</li>
+          <li>Walk to the spot and tap <strong>"I solved it"</strong>.</li>
+          <li>The whole team sees every solve in real time.</li>
+        </ol>
+        <p class="note">Tip: your team only needs <strong>one shared password</strong>. Anyone with it can join the team's progress board.</p>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========== HUNT VIEW (team is signed in) ========== -->
+  <div id="huntView" style="display: none;">
+    <header class="hero">
+      <div class="hero-inner" id="teamWelcome"></div>
+      <div class="progress-wrap" style="position: relative; z-index: 1;">
+        <div class="progress-meta">
+          <span><strong id="progressLabel">0 of 30</strong> solved</span>
+          <span>Synced live</span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="section-head">
+        <h2>Your clues</h2>
+        <span class="count" id="unsolvedCount">30 remaining</span>
+      </div>
+
+      <section class="clue-grid" id="clueGridUnsolved" aria-label="Unsolved clues"></section>
+
+      <div class="solved-divider" id="solvedDivider" style="display: none;">
+        <span class="divider-text">solved</span>
+      </div>
+
+      <section class="clue-grid" id="clueGridSolved" aria-label="Solved clues"></section>
+
+      <section class="info-card">
+        <h3>Reminders</h3>
+        <ul>
+          <li>Progress is shared with your whole team — solves show up within seconds.</li>
+          <li>Clues can be tackled in any order. Save clue 30 for last.</li>
+          <li>Use the <strong>Switch</strong> button in the corner to change teams.</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <!-- ========== PASSWORD MODAL ========== -->
+  <div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <span class="icon" id="modalIcon">🔥</span>
+        <div>
+          <h3 id="modalTitle">Team</h3>
+          <div class="sub" id="modalSub">Tagline</div>
+        </div>
+      </div>
+      <div class="modal-error" id="authError">Wrong password.</div>
+      <input type="password" class="modal-input" id="passwordInput" placeholder="Team password" autocomplete="off" inputmode="text" />
+      <div class="modal-hint" id="modalHint">Ask your host for the password.</div>
+      <div class="modal-row">
+        <button class="btn btn-ghost" id="modalCancel" type="button">Cancel</button>
+        <button class="btn btn-orange" id="modalSubmit" type="button">Enter</button>
       </div>
     </div>
-
-    <section class="team-grid" id="teamGrid" aria-label="Teams"></section>
-
-    <section class="info-card">
-      <h2>How it works</h2>
-      <ol>
-        <li>Tap your team above (or scan your team's QR code).</li>
-        <li>You'll land on your team page with all 30 clue cards.</li>
-        <li>Open any clue, solve the puzzle to reveal a Calgary location.</li>
-        <li>Walk to the spot, take a team photo, and upload it on the clue page.</li>
-        <li>Tap <strong>"I solved it"</strong> to mark the clue complete.</li>
-        <li>Solve all 30 and head back to the office for the prize.</li>
-      </ol>
-      <p class="footer-note">Progress is saved on your device for your team — your team can keep tabs from any phone using the same QR code.</p>
-    </section>
-  </main>
+  </div>
 
   <footer class="footer">
-    <img src="assets/remedy-logo.png" alt="Remedy Engineering" style="filter: brightness(0) invert(1);" />
-    <div>Made for the Remedy team &middot; Calgary 2026</div>
+    <img src="assets/remedy-logo.png" alt="Remedy Engineering" />
+    <div>Remedy Engineering · Calgary 2026</div>
   </footer>
 
   <script src="script.js"></script>
