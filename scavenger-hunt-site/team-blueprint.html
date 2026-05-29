@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#3a7bd5" />
+  <title>Team Blueprint — Remedy Scavenger Hunt</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/remedy-r.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="topbar" id="topbar"></nav>
+
+  <header class="hero" style="background:
+      radial-gradient(ellipse at 80% -10%, #3a7bd533 0%, transparent 50%),
+      radial-gradient(ellipse at 10% 110%, #3a7bd522 0%, transparent 50%),
+      #414042;">
+    <div class="hero-inner">
+      <span class="eyebrow" style="color: #3a7bd5; border-color: #3a7bd566; background: #3a7bd51a;">
+        📐 Welcome aboard
+      </span>
+      <h1 class="title">Team Blueprint</h1>
+      <p class="tagline">Plan the path. Solve the puzzle.</p>
+
+      <div class="progress-wrap">
+        <div class="progress-meta">
+          <span id="progressLabel">0 of 30 solved</span>
+          <button id="resetBtn" class="reset-btn" type="button">Reset</button>
+        </div>
+        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="30" aria-valuenow="0">
+          <div class="progress-fill" id="progressFill" style="background: linear-gradient(90deg, #3a7bd5 0%, #ffd9a8 100%);"></div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span class="legend-item"><span class="dot dot-word"></span>Word</span>
+        <span class="legend-item"><span class="dot dot-logic"></span>Logic</span>
+        <span class="legend-item"><span class="dot dot-visual"></span>Visual</span>
+        <span class="legend-item"><span class="dot dot-code"></span>Code</span>
+        <span class="legend-item"><span class="dot dot-action"></span>Action</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div class="section-head">
+      <div>
+        <h2>Your 30 clues</h2>
+        <p class="section-sub">Tackle them in any order. Each one points to a Calgary location.</p>
+      </div>
+    </div>
+
+    <section class="clue-grid" id="clueGrid" aria-label="Clue list"></section>
+
+    <section class="info-card">
+      <h2>Quick tips for Team Blueprint</h2>
+      <ul>
+        <li>The orange/lime tag in the top corner always shows your team — bookmark this page for easy return.</li>
+        <li>Photo uploads stay on your device. Show them to the host at the finish line.</li>
+        <li>Stuck on a clue? Skip it and come back — order doesn't matter (except clue 30, the finale).</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <img src="assets/remedy-logo.png" alt="Remedy Engineering" style="filter: brightness(0) invert(1);" />
+    <div>Team Blueprint &middot; Remedy Engineering Hunt &middot; Calgary 2026</div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    // Lock this page's team identity
+    window.REMEDY.setTeam("blueprint");
+    document.addEventListener("DOMContentLoaded", () => {
+      window.REMEDY = window.REMEDY;
+      // re-render topbar and grid with the team now set
+      const bar = document.getElementById("topbar");
+      bar.innerHTML = "";
+      const tinfo = window.REMEDY.getTeamInfo();
+      bar.innerHTML = `
+        <a href="index.html" aria-label="Home">
+          <img src="assets/remedy-logo.png" alt="Remedy Engineering" class="brand-logo" />
+        </a>
+        <span class="team-tag" style="--team-color: ${tinfo.color};">
+          <span class="team-swatch"></span>
+          <span>${tinfo.emoji} ${tinfo.name}</span>
+        </span>
+      `;
+    });
+  </script>
+</body>
+</html>

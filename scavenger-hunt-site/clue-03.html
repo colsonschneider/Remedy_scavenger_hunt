@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#414042" />
+  <title>Clue 03 — Find the Threads</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" href="assets/remedy-r.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+  <nav class="topbar" id="topbar"></nav>
+
+  <main class="clue-page">
+    <a href="#" id="backLink" class="back-link">← Back to your team</a>
+
+    <div class="clue-header">
+      <div class="clue-number-large">Clue 03 of 30</div>
+      <h1>Find the Threads</h1>
+      <span class="clue-type-pill" style="color: #c8a6ff; border: 1px solid #c8a6ff66; background: #c8a6ff1a;">Connections</span>
+    </div>
+
+    
+    <div class="puzzle-box">
+      <h2 style="text-align: center;">Find four groups of four</h2>
+      <p style="text-align: center;">Tap 4 tiles you think belong together, then hit <strong>Submit</strong>. Find all 4 groups to reveal a Calgary location.</p>
+      <div class="connections-grid" id="connGrid"></div>
+      <div id="connStatus" style="text-align: center; margin-top: 8px; font-size: 0.9rem; color: var(--text-dim);"></div>
+      <div class="conn-controls">
+        <button class="btn btn-outline" id="connClear" type="button">Clear</button>
+        <button class="btn btn-primary" id="connSubmit" type="button">Submit group</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+    
+
+    <div class="photo-box" id="photoBox" style="display: none;">
+      <h3>📸 Photo proof required</h3>
+      <p>Take a team photo at <strong id="locationName"></strong> to claim the clue.</p>
+      <label class="upload-btn" for="photoInput">Upload team photo</label>
+      <input type="file" id="photoInput" accept="image/*" capture="environment" />
+      <img class="photo-preview" id="photoPreview" alt="Your team photo" />
+    </div>
+
+    <button class="solve-btn" id="solveBtn" type="button">I solved it ✓</button>
+  </main>
+
+  <script src="script.js"></script>
+  <script>
+    const CLUE_NUM = 3;
+    const ANSWER = "Riley Park";
+    const LOCATION = "Riley Park";
+
+    // back link points at the team's page
+    const teamInfo = window.REMEDY.getTeamInfo();
+    const backLink = document.getElementById("backLink");
+    if (teamInfo) { backLink.href = teamInfo.url; backLink.textContent = `← Back to ${teamInfo.name}`; }
+    else { backLink.href = "index.html"; backLink.textContent = "← Choose your team"; }
+
+    const photoBox = document.getElementById("photoBox");
+    const photoInput = document.getElementById("photoInput");
+    const photoPreview = document.getElementById("photoPreview");
+    const locationName = document.getElementById("locationName");
+
+    function revealLocation() {
+      locationName.textContent = LOCATION;
+      photoBox.style.display = "block";
+    }
+
+    function loadPhoto() {
+      const team = window.REMEDY.getTeam();
+      const data = localStorage.getItem(window.REMEDY.photoKey(team, CLUE_NUM));
+      if (data) {
+        photoPreview.src = data;
+        photoPreview.classList.add("show");
+      }
+    }
+
+    photoInput.addEventListener("change", e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        photoPreview.src = ev.target.result;
+        photoPreview.classList.add("show");
+        try {
+          const team = window.REMEDY.getTeam();
+          localStorage.setItem(window.REMEDY.photoKey(team, CLUE_NUM), ev.target.result);
+        } catch (err) {
+          console.warn("Photo too large to save locally:", err);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    // Solve button
+    const solveBtn = document.getElementById("solveBtn");
+    function refreshSolve() {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) {
+        solveBtn.textContent = "Solved ✓ (tap to undo)";
+        solveBtn.classList.add("solved");
+      } else {
+        solveBtn.textContent = "I solved it ✓";
+        solveBtn.classList.remove("solved");
+      }
+    }
+    solveBtn.addEventListener("click", () => {
+      const solved = window.REMEDY.loadProgress();
+      if (solved.has(CLUE_NUM)) solved.delete(CLUE_NUM);
+      else solved.add(CLUE_NUM);
+      window.REMEDY.saveProgress(solved);
+      refreshSolve();
+    });
+
+    // Photo persistence
+    loadPhoto();
+    refreshSolve();
+
+    // Puzzle-specific logic
+    
+    const GROUPS = [{"label": "Calgary Bridges", "words": ["PEACE", "LOUISE", "CENTRE STREET", "LANGEVIN"]}, {"label": "Bow River Parks", "words": ["PRINCES", "RILEY", "ST PATRICK", "EAU CLAIRE"]}, {"label": "Kensington Spots", "words": ["PULCINELLA", "HAYDEN BLOCK", "PAGES", "VENDOME"]}, {"label": "Calgary Towers/Tall", "words": ["BOW", "TELUS SKY", "CALGARY TOWER", "BANKERS HALL"]}];
+    const allTiles = [];
+    GROUPS.forEach((g, gi) => g.words.forEach(w => allTiles.push({ word: w, group: gi })));
+    // shuffle
+    for (let i = allTiles.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [allTiles[i], allTiles[j]] = [allTiles[j], allTiles[i]];
+    }
+    const grid = document.getElementById("connGrid");
+    const status = document.getElementById("connStatus");
+    const submitBtn = document.getElementById("connSubmit");
+    const clearBtn = document.getElementById("connClear");
+    const feedback = document.getElementById("feedback");
+    let selected = new Set();
+    let solvedGroups = 0;
+
+    function render() {
+      grid.innerHTML = "";
+      // banners for solved groups
+      for (let gi = 0; gi < GROUPS.length; gi++) {
+        if (GROUPS[gi]._solved) {
+          const banner = document.createElement("div");
+          banner.className = `conn-group-banner solved-${gi+1}`;
+          banner.style.gridColumn = "1 / -1";
+          banner.style.background = ["#f9d8a3", "#d4e9b0", "#c5d8f3", "#f2b8c6"][gi];
+          banner.innerHTML = `<strong>${GROUPS[gi].label}:</strong> ${GROUPS[gi].words.join(" • ")}`;
+          grid.appendChild(banner);
+        }
+      }
+      // remaining tiles
+      allTiles.forEach((t, idx) => {
+        if (GROUPS[t.group]._solved) return;
+        const el = document.createElement("div");
+        el.className = "conn-tile";
+        if (selected.has(idx)) el.classList.add("selected");
+        el.textContent = t.word;
+        el.addEventListener("click", () => {
+          if (selected.has(idx)) selected.delete(idx);
+          else if (selected.size < 4) selected.add(idx);
+          render();
+        });
+        grid.appendChild(el);
+      });
+      status.textContent = solvedGroups === 4 ? "All groups found!" : `${selected.size}/4 selected — ${solvedGroups}/4 groups solved`;
+    }
+
+    submitBtn.addEventListener("click", () => {
+      if (selected.size !== 4) { feedback.className = "feedback show wrong"; feedback.textContent = "Pick exactly 4 tiles."; return; }
+      const groupsHit = [...selected].map(i => allTiles[i].group);
+      const first = groupsHit[0];
+      if (groupsHit.every(g => g === first)) {
+        GROUPS[first]._solved = true;
+        solvedGroups++;
+        selected.clear();
+        feedback.className = "feedback show correct";
+        feedback.textContent = `${GROUPS[first].label} — correct!`;
+        render();
+        if (solvedGroups === 4) {
+          feedback.textContent = `All four groups found! The answer is ${Riley Park}. Head to ${"Riley Park"} and snap a team photo.`;
+          revealLocation();
+        }
+      } else {
+        feedback.className = "feedback show wrong";
+        feedback.textContent = "Not a group — try again.";
+      }
+    });
+    clearBtn.addEventListener("click", () => { selected.clear(); render(); });
+    render();
+
+  </script>
+</body>
+</html>
